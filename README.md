@@ -1,2 +1,98 @@
-# inference-on-LLMs
-This repository contains a list of key papers on inference on LLMs
+# Inference-on-LLMs
+This repository contains a list of key papers on **inference on LLMs**
+
+## GitHub Repositories
+
+- **Awesome LLM Strawberry (OpenAI o1)**  
+ 
+  [A benchmark repository for research papers & blogs for OpenAI Strawberry(o1) and Reasoning.](https://github.com/hemingkx/Spec-Bench)
+
+- **Speculative Decoding**
+  
+  [A regularly updated paper list for Speculative Decoding.](https://github.com/hemingkx/SpeculativeDecodingPapers/tree/main)
+
+
+## Papers
+
+### Inference Scaling Laws
+
+- **An Empirical Analysis of Compute-Optimal Inference for Problem-Solving with Language Models**  
+  Yangzhen Wu, Zhiqing Sun, Shanda Li, Sean Welleck, Yiming Yang, 2024.08. ![](https://img.shields.io/badge/Arxiv-orange)
+  
+- **Are More LM Calls All You Need?  Towards the Scaling Properties of Compound AI Systems**  
+  Lingjiao Chen, Jared Quincy Davis, Boris Hanin, Peter Bailis, Ion Stoica, Matei Zaharia, James Zou, 2024.06. ![](https://img.shields.io/badge/Arxiv-orange)
+  
+- **Large Language Monkeys: Scaling Inference Compute  with Repeated Sampling**  
+  Bradley Brown, Jordan Juravsky, Ryan Ehrlich, Ronald Clark, Quoc V. Le, Christopher R ́e, and Azalia Mirhoseini, 2024.08. ![](https://img.shields.io/badge/Arxiv-orange)
+
+- **Scaling LLM Test-Time Compute Optimally can be More Effective than Scaling Model Parameters**  
+  Charlie Snell, Jaehoon Lee, Kelvin Xu, and Aviral Kumar, 2024.08. ![](https://img.shields.io/badge/DeepMind-blue)
+
+- **The Larger the Better? Improved LLM Code-Generation via Budget Reallocation**  
+  Michael Hassid, Tal Remez, Jonas Gehring, Roy Schwartz, Yossi Adi 2024.07. ![](https://img.shields.io/badge/COLM-orange) ![](https://img.shields.io/badge/OpenReview-orange)
+
+### Reasoning
+
+- **Training Verifiers to Solve Math Word Problems**  
+  Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, John Schulman, 2021.11.  ![](https://img.shields.io/badge/OpenAI-blue)
+
+- **Let's Verify Step by Step**  
+  Hunter Lightman, Vineet Kosaraju, Yura Burda, Harri Edwards, Bowen Baker, Teddy Lee, Jan Leike, John Schulman, Ilya Sutskever, Karl Cobbe, 2023.05.  ![](https://img.shields.io/badge/OpenAI-blue)
+
+- **Mutual Reasoning Makes Smaller LLMs Stronger Problem-Solvers**  
+  Zhenting Qi, Mingyuan Ma, Jiahang Xu, Li Lyna Zhang, Fan Yang, Mao Yang, 2024.08.  ![](https://img.shields.io/badge/Microsoft-blue)
+
+-  **Q<sup>*</sup>: Improving Multi-step Reasoning for LLMs with Deliberative Planning**    
+  Chaojie Wang, Yanchen Deng, Zhiyi Lyu, Liang Zeng, Jujie He, Shuicheng Yan, Bo An, 2024.07. ![](https://img.shields.io/badge/Arxiv-orange)
+
+- **Planning In Natural Language Improves LLM Search For Code Generation**  
+  Evan Wang, Federico Cassano, Catherine Wu, Yunfeng Bai, Will Song, Vaskar Nath, Ziwen Han, Sean Hendryx, Summer Yue, Hugh Zhang, 2024.09.  ![](https://img.shields.io/badge/ScaleAI-blue)
+
+- **Generative Verifiers: Reward Modeling as Next-Token Prediction**  
+  Lunjun Zhang, Arian Hosseini, Hritik Bansal, Mehran Kazemi, Aviral Kumar, Rishabh Agarwal, 2024.08.  ![](https://img.shields.io/badge/OpenAI-blue)
+
+#### MCTS
+
+-  **Accessing GPT-4 level Mathematical Olympiad Solutions via Monte Carlo Tree Self-refine with LLaMa-3 8B**    
+  Di Zhang, Xiaoshui Huang, Dongzhan Zhou, Yuqiang Li, Wanli Ouyang, 2024.06. ![](https://img.shields.io/badge/Arxiv-orange)
+
+-  **Toward Self-Improvement of LLMs via Imagination, Searching, and Criticizing**    
+  Ye Tian, Baolin Peng, Linfeng Song, Lifeng Jin, Dian Yu, Haitao Mi, and Dong Yu., 2024.04. ![](https://img.shields.io/badge/Arxiv-orange)
+
+-  **AlphaMath Almost Zero: Process Supervision Without Process**    
+  Guoxin Chen, Minpeng Liao, Chengxi Li, Kai Fan., 2024.05. ![](https://img.shields.io/badge/Arxiv-orange)
+
+-  **ReST-MCTS: LLM Self-Training via Process Reward Guided Tree Search**    
+  Dan Zhang, Sining Zhoubian, Yisong Yue, Yuxiao Dong, and Jie Tang.., 2024.06. ![](https://img.shields.io/badge/Arxiv-orange)
+
+-  **Monte Carlo Tree Search Boosts Reasoning via Iterative Preference Learning**    
+  Yuxi Xie, Anirudh Goyal, Wenyue Zheng, Min-Yen Kan, Timothy P. Lillicrap, Kenji Kawaguchi, Michael Shieh, 2024.06. ![](https://img.shields.io/badge/Arxiv-orange)
+
+-  **Training Chain-of-Thought via Latent-Variable Inference**    
+  Du Phan, Matthew D. Hoffman, David Dohan, Sholto Douglas, Tuan Anh Le, Aaron Parisi, Pavel Sountsov, Charles Sutton, Sharad Vikram, Rif A. Saurous, 2023.11. ![](https://img.shields.io/badge/Google-blue)  ![](https://img.shields.io/badge/NIPS-orange)
+
+-  **Alphazero-like Tree-Search can Guide Large Language Model Decoding and Training**    
+  Xidong Feng, Ziyu Wan, Muning Wen, Stephen Marcus McAleer, Ying Wen, Weinan Zhang, Jun Wang
+, 2023.11. ![](https://img.shields.io/badge/NIPS_FMDM_Workshop-orange)
+
+-  **Reasoning with Language Model is Planning with World Model**    
+  Shibo Hao, Yi Gu, Haodi Ma, Joshua Jiahua Hong, Zhen Wang, Daisy Zhe Wang, Zhiting Hu
+, 2023.10. ![](https://img.shields.io/badge/EMNLP-orange)
+
+-  **Don’t throw away your value model! Generating more preferable text with Value-Guided Monte-Carlo Tree Search decoding**    
+  Liu, Jiacheng, Andrew Cohen, Ramakanth Pasunuru, Yejin Choi, Hannaneh Hajishirzi, and Asli Celikyilmaz.
+, 2023.09. ![](https://img.shields.io/badge/COLM-orange)
+
+
+### Theoretical Understanding
+
+- **Chain of Thought Empowers Transformers to Solve Inherently Serial Problems**  
+  Zhiyuan Li, Hong Liu, Denny Zhou, Tengyu Ma 2024.01. ![](https://img.shields.io/badge/ICLR-orange) ![](https://img.shields.io/badge/OpenReview-orange)
+  
+### Other Relevent Works
+
+- **Smaller, Weaker, Yet Better: Training LLM Reasoners via Compute-Optimal Sampling**  
+  Hritik Bansal, Arian Hosseini, Rishabh Agarwal, Vinh Q. Tran, Mehran Kazemi 2024.08. ![](https://img.shields.io/badge/DeepMind-blue)
+
+
+
