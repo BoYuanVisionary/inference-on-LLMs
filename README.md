@@ -93,6 +93,12 @@ Souradip Chakraborty, Soumya Suvra Ghosal, Ming Yin, Dinesh Manocha, Mengdi Wang
 
 - **Chain of Thought Empowers Transformers to Solve Inherently Serial Problems**  
   Zhiyuan Li, Hong Liu, Denny Zhou, Tengyu Ma 2024.01. ![](https://img.shields.io/badge/ICLR-orange) ![](https://img.shields.io/badge/OpenReview-orange)
+
+
+### Survey
+
+- **Towards a Unified View of Preference Learning for Large Language Models: A Survey**  
+  Bofei Gao, Feifan Song, Yibo Miao, Zefan Cai, Zhe Yang, Liang Chen, Helan Hu,... 2024.09. ![](https://img.shields.io/badge/Arxiv-orange)
   
 ### Other Relevant Works
 
