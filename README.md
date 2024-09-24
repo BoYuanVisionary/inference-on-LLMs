@@ -84,15 +84,26 @@ This repository contains a list of key papers on **inference on LLMs**
 , 2023.09. ![](https://img.shields.io/badge/COLM-orange)
 
 
+### RLHF
+
+-  **Transfer Q Star: Principled Decoding for LLM Alignment**    
+Souradip Chakraborty, Soumya Suvra Ghosal, Ming Yin, Dinesh Manocha, Mengdi Wang, Amrit Singh Bedi, Furong Huang, 2024.05. ![](https://img.shields.io/badge/Arxiv-orange)
+
 ### Theoretical Understanding
 
 - **Chain of Thought Empowers Transformers to Solve Inherently Serial Problems**  
   Zhiyuan Li, Hong Liu, Denny Zhou, Tengyu Ma 2024.01. ![](https://img.shields.io/badge/ICLR-orange) ![](https://img.shields.io/badge/OpenReview-orange)
   
-### Other Relevent Works
+### Other Relevant Works
 
 - **Smaller, Weaker, Yet Better: Training LLM Reasoners via Compute-Optimal Sampling**  
   Hritik Bansal, Arian Hosseini, Rishabh Agarwal, Vinh Q. Tran, Mehran Kazemi 2024.08. ![](https://img.shields.io/badge/DeepMind-blue)
+
+
+- **To CoT or not to CoT? Chain-of-thought helps mainly on math and symbolic reasoning**    
+Zayne Sprague, Fangcong Yin, Juan Diego Rodriguez, Dongwei Jiang, Manya Wadhwa, Prasann Singhal, Xinyu Zhao, Xi Ye, Kyle Mahowald, Greg Durrett, 2024.09. ![](https://img.shields.io/badge/Arxiv-orange)
+
+
 
 
 
