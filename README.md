@@ -61,6 +61,10 @@ This repository contains a list of key papers on **inference on LLMs**
 -  **Interpretable Contrastive Monte Carlo Tree Search Reasoning**    
   Zitian Gao, Boye Niu, Xuzheng He, Haotian Xu, Hongzhang Liu, Aiwei Liu, Xuming Hu, Lijie Wen, 2024.10. ![](https://img.shields.io/badge/Arxiv-orange)
 
+-  **Mutual Reasoning Makes Smaller LLMs Stronger Problem-Solvers**    
+  Zhenting Qi, Mingyuan Ma, Jiahang Xu, Li Lyna Zhang, Fan Yang, Mao Yang, 2024.08. ![](https://img.shields.io/badge/Arxiv-orange)
+
+
 -  **Accessing GPT-4 level Mathematical Olympiad Solutions via Monte Carlo Tree Self-refine with LLaMa-3 8B**    
   Di Zhang, Xiaoshui Huang, Dongzhan Zhou, Yuqiang Li, Wanli Ouyang, 2024.06. ![](https://img.shields.io/badge/Arxiv-orange)
 
