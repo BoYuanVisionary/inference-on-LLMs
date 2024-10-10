@@ -91,6 +91,11 @@ This repository contains a list of key papers on **inference on LLMs**
   Liu, Jiacheng, Andrew Cohen, Ramakanth Pasunuru, Yejin Choi, Hannaneh Hajishirzi, and Asli Celikyilmaz.
 , 2023.09. ![](https://img.shields.io/badge/COLM-orange)
 
+-  **Large Language Models as Commonsense Knowledge for Large-Scale Task Planning**    
+  Zirui Zhao, Wee Sun Lee, David Hsu, 2023.05. ![](https://img.shields.io/badge/NIPS-orange)
+
+
+
 
 ### RLHF
 
