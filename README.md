@@ -12,6 +12,11 @@ This repository contains a list of key papers on **inference on LLMs**
   [A regularly updated paper list for Speculative Decoding.](https://github.com/hemingkx/SpeculativeDecodingPapers/tree/main)
 
 
+- **Reasoning**
+  
+  [A regularly updated paper list for LLM Reasoning.]( https://github.com/atfortes/Awesome-LLM-Reasoning)
+
+
 ## Papers
 
 ### Inference Scaling Laws
