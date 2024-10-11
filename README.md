@@ -136,6 +136,10 @@ Souradip Chakraborty, Soumya Suvra Ghosal, Ming Yin, Dinesh Manocha, Mengdi Wang
 Zayne Sprague, Fangcong Yin, Juan Diego Rodriguez, Dongwei Jiang, Manya Wadhwa, Prasann Singhal, Xinyu Zhao, Xi Ye, Kyle Mahowald, Greg Durrett, 2024.09. ![](https://img.shields.io/badge/Arxiv-orange)
 
 
+### VLM & Planning
+
+- **Improving Autonomous AI Agents with Reflective Tree Search and Self-Learning**    
+Xiao Yu, Baolin Peng, Vineeth Vajipey, Hao Cheng, Michel Galley, Jianfeng Gao, Zhou Yu, 2024.10. ![](https://img.shields.io/badge/Arxiv-orange)
 
 
 
