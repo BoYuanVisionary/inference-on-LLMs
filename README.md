@@ -73,12 +73,14 @@ This repository contains a list of key papers on **inference on LLMs**
 -  **Mutual Reasoning Makes Smaller LLMs Stronger Problem-Solvers**    
   Zhenting Qi, Mingyuan Ma, Jiahang Xu, Li Lyna Zhang, Fan Yang, Mao Yang, 2024.08. ![](https://img.shields.io/badge/Arxiv-orange)
 
+-  **LLaMA-Berry: Pairwise Optimization for O1-like Olympiad-Level Mathematical Reasoning**    
+ Di Zhang, Jianbo Wu, Jingdi Lei, Tong Che, Jiatong Li, Tong Xie, Xiaoshui Huang, Shufei Zhang, Marco Pavone, Yuqiang Li, Wanli Ouyang, Dongzhan Zhou, 2024.10. ![](https://img.shields.io/badge/Arxiv-orange)
 
 -  **Accessing GPT-4 level Mathematical Olympiad Solutions via Monte Carlo Tree Self-refine with LLaMa-3 8B**    
   Di Zhang, Xiaoshui Huang, Dongzhan Zhou, Yuqiang Li, Wanli Ouyang, 2024.06. ![](https://img.shields.io/badge/Arxiv-orange)
 
--  **Toward Self-Improvement of LLMs via Imagination, Searching, and Criticizing**    
-  Ye Tian, Baolin Peng, Linfeng Song, Lifeng Jin, Dian Yu, Haitao Mi, and Dong Yu., 2024.04. ![](https://img.shields.io/badge/Arxiv-orange)
+-  **Step-level Value Preference Optimization for Mathematical Reasoning**    
+  Guoxin Chen, Minpeng Liao, Chengxi Li, Kai Fan., 2024.06. ![](https://img.shields.io/badge/Arxiv-orange)
 
 -  **AlphaMath Almost Zero: Process Supervision Without Process**    
   Guoxin Chen, Minpeng Liao, Chengxi Li, Kai Fan., 2024.05. ![](https://img.shields.io/badge/Arxiv-orange)
