@@ -58,6 +58,9 @@ This repository contains a list of key papers on **inference on LLMs**
 
 #### MCTS
 
+-  **Towards Self-Improvement of LLMs via MCTS: Leveraging Stepwise Knowledge with Curriculum Preference Learning**    
+  Xiyao Wang, Linfeng Song, Ye Tian, Dian Yu, Baolin Peng, Haitao Mi, Furong Huang, Dong Yu, 2024.10. ![](https://img.shields.io/badge/Arxiv-orange)
+
 -  **Interpretable Contrastive Monte Carlo Tree Search Reasoning**    
   Zitian Gao, Boye Niu, Xuzheng He, Haotian Xu, Hongzhang Liu, Aiwei Liu, Xuming Hu, Lijie Wen, 2024.10. ![](https://img.shields.io/badge/Arxiv-orange)
 
