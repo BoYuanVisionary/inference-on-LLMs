@@ -38,6 +38,9 @@ This repository contains a list of key papers on **inference on LLMs**
 
 ### Reasoning
 
+-  **VerifierQ: Enhancing LLM Test Time Compute with Q-Learning-based Verifiers**    
+  Jianing Qi, Hao Tang, Zhigang Zhu, 2024.10. ![](https://img.shields.io/badge/Arxiv-orange)
+
 - **Training Verifiers to Solve Math Word Problems**  
   Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, John Schulman, 2021.11.  ![](https://img.shields.io/badge/OpenAI-blue)
 
