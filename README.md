@@ -82,8 +82,8 @@ This repository contains a list of key papers on **inference on LLMs**
 -  **Step-level Value Preference Optimization for Mathematical Reasoning**    
   Guoxin Chen, Minpeng Liao, Chengxi Li, Kai Fan., 2024.06. ![](https://img.shields.io/badge/Arxiv-orange)
 
-- **Improve Mathematical Reasoning in Language Models by Automated Process Supervision**
-  Liangchen Luo, Yinxiao Liu, Rosanne Liu, Samrat Phatale, Harsh Lara, Yunxuan Li, Lei Shu, Yun Zhu, Lei Meng, Jiao Sun, Abhinav Rastogi, 2024.05. ![](https://img.shields.io/badge/DeepMind-blue)
+-  **Improve Mathematical Reasoning in Language Models by Automated Process Supervision**    
+  Liangchen Luo, Yinxiao Liu, Rosanne Liu, Samrat Phatale, Harsh Lara, Yunxuan Li, Lei Shu, Yun Zhu, Lei Meng, Jiao Sun, Abhinav Rastogi, 2024.06. ![](https://img.shields.io/badge/DeepMind-blue)
 
 -  **AlphaMath Almost Zero: Process Supervision Without Process**    
   Guoxin Chen, Minpeng Liao, Chengxi Li, Kai Fan., 2024.05. ![](https://img.shields.io/badge/Arxiv-orange)
@@ -111,7 +111,6 @@ This repository contains a list of key papers on **inference on LLMs**
 
 -  **Large Language Models as Commonsense Knowledge for Large-Scale Task Planning**    
   Zirui Zhao, Wee Sun Lee, David Hsu, 2023.05. ![](https://img.shields.io/badge/NIPS-orange)
-
 
 
 
