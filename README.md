@@ -125,6 +125,11 @@ Souradip Chakraborty, Soumya Suvra Ghosal, Ming Yin, Dinesh Manocha, Mengdi Wang
   Zhiyuan Li, Hong Liu, Denny Zhou, Tengyu Ma 2024.01. ![](https://img.shields.io/badge/ICLR-orange) ![](https://img.shields.io/badge/OpenReview-orange)
 
 
+- **From r to Q∗: Your Language Model is Secretly a Q-Function**  
+  Rafael Rafailov, Joey Hejna, Ryan Park, Chelsea Finn 2024.04. ![](https://img.shields.io/badge/COLM-orange)
+
+
+
 ### Survey
 
 - **Towards a Unified View of Preference Learning for Large Language Models: A Survey**  
