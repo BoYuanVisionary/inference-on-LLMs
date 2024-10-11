@@ -61,6 +61,9 @@ This repository contains a list of key papers on **inference on LLMs**
 
 #### MCTS
 
+-  **LLaMA-Berry: Pairwise Optimization for O1-like Olympiad-Level Mathematical Reasoning**    
+ Di Zhang, Jianbo Wu, Jingdi Lei, Tong Che, Jiatong Li, Tong Xie, Xiaoshui Huang, Shufei Zhang, Marco Pavone, Yuqiang Li, Wanli Ouyang, Dongzhan Zhou, 2024.10. ![](https://img.shields.io/badge/Arxiv-orange)
+
 -  **Towards Self-Improvement of LLMs via MCTS: Leveraging Stepwise Knowledge with Curriculum Preference Learning**    
   Xiyao Wang, Linfeng Song, Ye Tian, Dian Yu, Baolin Peng, Haitao Mi, Furong Huang, Dong Yu, 2024.10. ![](https://img.shields.io/badge/Arxiv-orange)
 
