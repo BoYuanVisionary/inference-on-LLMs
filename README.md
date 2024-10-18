@@ -38,6 +38,10 @@ This repository contains a list of key papers on **inference on LLMs**
 
 ### Reasoning
 
+-  **Rewarding Progress: Scaling Automated Process Verifiers for LLM Reasoning**    
+  Amrith Setlur, Chirag Nagpal, Adam Fisch, Xinyang Geng, Jacob Eisenstein, Rishabh Agarwal, Alekh Agarwal, Jonathan Berant, Aviral Kumar
+, 2024.10. ![](https://img.shields.io/badge/Arxiv-orange)![](https://img.shields.io/badge/DeepMind-blue)
+
 -  **VerifierQ: Enhancing LLM Test Time Compute with Q-Learning-based Verifiers**    
   Jianing Qi, Hao Tang, Zhigang Zhu, 2024.10. ![](https://img.shields.io/badge/Arxiv-orange)
 
