@@ -1,4 +1,4 @@
-# controllable text generation works published this year  (papers from icml, nips, colm, emnlp, acl and naacl,  but no publication on nips and colm)
+# controllable text generation works published this year  (papers from icml, emnlp, acl and naacl,  but no publication on nips and colm)
 
 - **Improving Open-Ended Text Generation via Adaptive Decoding**  
  This study introduces adaptive decoding, a mechanism that dynamically empowers language models to ascertain a sensible candidate set during generation. Specifically, we introduce an entropy-based metric called confidence and conceptualize determining the optimal candidate set as a confidence-increasing process. ![](https://img.shields.io/badge/ICML-orange)
