@@ -11,4 +11,9 @@
 
 - **Benchmarking and Improving Compositional Generalization of Multi-aspect Controllable Text Generation**  
   We propose CompMCTG, a benchmark encompassing diverse multi-aspect labeled datasets. We observe that existing MCTG works generally confront a noticeable performance drop in compositional testing. To mitigate this issue, we introduce a training framework incorporating meta-learning.![](https://img.shields.io/badge/ACL-orange)
+
+- **Controlled Text Generation for Black-box Language Models via Score-based Progressive Editor**  
+  ScoPE modifies the context at the token level during the generation process of a backbone language model. ![](https://img.shields.io/badge/ACL-orange)
   
+- **FreeCtrl: Constructing Control Centers with Feedforward Layers for Learning-Free Controllable Text Generation**  
+  We propose FreeCtrl, a learning free approach that dynamically adjusts the weights of selected feedforward neural network (FFN) vectors to steer the outputs of large language models (LLMs). ![](https://img.shields.io/badge/ACL-orange)
