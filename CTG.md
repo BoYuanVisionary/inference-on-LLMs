@@ -1,31 +1,13 @@
-# Inference-on-LLMs
-This repository contains a list of key papers on **inference on LLMs**
+# controllable text generation, works published this year
 
-## GitHub Repositories
-
-- **Awesome LLM Strawberry (OpenAI o1)**  
- 
-  [A benchmark repository for research papers & blogs for OpenAI Strawberry(o1) and Reasoning.](https://github.com/hemingkx/Spec-Bench)
-
-- **Speculative Decoding**
+- **Improving Open-Ended Text Generation via Adaptive Decoding**  
+ This study introduces adaptive decoding, a mechanism that dynamically empowers language models to ascertain a sensible candidate set during generation. Specifically, we introduce an entropy-based metric called confidence and conceptualize determining the optimal candidate set as a confidence-increasing process. ![](https://img.shields.io/badge/ICML-orange)
   
-  [A regularly updated paper list for Speculative Decoding.](https://github.com/hemingkx/SpeculativeDecodingPapers/tree/main)
-
-
-- **Reasoning**
+- **Successor Features for Efficient Multi-Subject Controlled Text Generation**  
+ This method leverages the concept of successor features to decouple the dynamics of LLMs from task-specific rewards. By employing successor features, our method proves to be memory-efficient and computationally efficient for both training and decoding, especially when dealing with multiple target subjects. ![](https://img.shields.io/badge/ICML-orange)
   
-  [A regularly updated paper list for LLM Reasoning.]( https://github.com/atfortes/Awesome-LLM-Reasoning)
+- **Model-Based Minimum Bayes Risk Decoding for Text Generation**  
+  We propose a variant of MBR that uses the model probability itself as the estimate of the probability distribution instead of the Monte Carlo estimate. ![](https://img.shields.io/badge/ICML-orange)
 
 
-## Papers
-
-### Inference Scaling Laws
-
-- **An Empirical Analysis of Compute-Optimal Inference for Problem-Solving with Language Models**  
-  Yangzhen Wu, Zhiqing Sun, Shanda Li, Sean Welleck, Yiming Yang, 2024.08. ![](https://img.shields.io/badge/Arxiv-orange)
   
-- **Are More LM Calls All You Need?  Towards the Scaling Properties of Compound AI Systems**  
-  Lingjiao Chen, Jared Quincy Davis, Boris Hanin, Peter Bailis, Ion Stoica, Matei Zaharia, James Zou, 2024.06. ![](https://img.shields.io/badge/Arxiv-orange)
-  
-- **Large Language Monkeys: Scaling Inference Compute  with Repeated Sampling**  
-  Bradley Brown, Jordan Juravsky, Ryan Ehrlich, Ronald Clark, Quoc V. Le, Christopher R ́e, and Azalia Mirhoseini, 2024.08. ![](https://img.shields.io/badge/Arxiv-orange)
