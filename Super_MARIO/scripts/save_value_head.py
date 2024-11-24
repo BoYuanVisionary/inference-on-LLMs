@@ -5,8 +5,8 @@ import torch.nn as nn
 from transformers import AutoConfig
 from modeling_value_head import ValueHead
 
-model_name = "path to the pretrain model"
-value_model_save_path = "path to the pretrain model-value_model"
+model_name = "../deepseek-math-7b-base"
+value_model_save_path = "../deepseek-math-valuehead-7b-base/"
 os.makedirs(value_model_save_path, exist_ok=True)
 os.system(f"cp -r {model_name} {value_model_save_path}")
 

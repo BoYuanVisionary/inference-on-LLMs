@@ -1,5 +1,5 @@
 mode: "mcts"          
-model_dir: "../deepseek-math-valuehead-7b-base/"
+model_dir: "../deepseek-math-valuehead-7b-base/deepseek-math-7b-base"
 few_shot_path: "./mcts_math/few_shots/math.json"
 prompt_path: "./mcts_math/few_shots/prompt.json" 
 swap_space: 16
@@ -10,8 +10,8 @@ result_unwrap: "react"
 step_delim: "\n\n"
 stop: ["\nObservation:", "Observation:", "<Solution complete>"]
 max_depth: 8
-n_generate_sample: 5 
+n_generate_sample: 1 # default is 5
 iterations: 40
 seed: 42
-is_sampling: True
+is_sampling: False # default is True
 verbose: False
