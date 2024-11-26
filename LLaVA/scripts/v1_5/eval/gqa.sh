@@ -1,5 +1,5 @@
 #!/bin/bash
-
+export CUDA_VISIBLE_DEVICES=1,2,3
 gpu_list="${CUDA_VISIBLE_DEVICES:-0}"
 IFS=',' read -ra GPULIST <<< "$gpu_list"
 
@@ -21,19 +21,18 @@ for IDX in $(seq 0 $((CHUNKS-1))); do
         --conv-mode vicuna_v1 &
 done
 
-wait
+# wait
 
-output_file=./playground/data/eval/gqa/answers/$SPLIT/$CKPT/merge.jsonl
+# output_file=./playground/data/eval/gqa/answers/$SPLIT/$CKPT/merge.jsonl
 
-# Clear out the output file if it exists.
-> "$output_file"
+# # Clear out the output file if it exists.
+# > "$output_file"
 
-# Loop through the indices and concatenate each file.
-for IDX in $(seq 0 $((CHUNKS-1))); do
-    cat ./playground/data/eval/gqa/answers/$SPLIT/$CKPT/${CHUNKS}_${IDX}.jsonl >> "$output_file"
-done
+# # Loop through the indices and concatenate each file.
+# for IDX in $(seq 0 $((CHUNKS-1))); do
+#     cat ./playground/data/eval/gqa/answers/$SPLIT/$CKPT/${CHUNKS}_${IDX}.jsonl >> "$output_file"
+# done
 
-python scripts/convert_gqa_for_eval.py --src $output_file --dst $GQADIR/testdev_balanced_predictions.json
+# python scripts/convert_gqa_for_eval.py --src $output_file --dst $GQADIR/testdev_balanced_predictions.json
 
-cd $GQADIR
-python eval/eval.py --tier testdev_balanced
+python llava/eval/eval_gqa.py --tier testdev_balanced --questions $GQADIR/testdev_balanced_questions.json --predictions $GQADIR/testdev_balanced_predictions.json  > playground/nov26_gqa_llava_numbers.txt
