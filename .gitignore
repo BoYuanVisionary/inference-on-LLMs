@@ -2,3 +2,6 @@ AlphaMath-7B/*
 AlphaMath-7B
 deepseek-math*
 .vscode
+
+generated_datasets/
+generated_datasets/*

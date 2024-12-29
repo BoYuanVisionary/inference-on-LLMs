@@ -2,12 +2,11 @@ import numpy as np
 from datasets import load_dataset
 import time
 import argparse
-
 import json
 from vllm import LLM, SamplingParams
-
 import gc
 import torch
+import torch.distributed as dist
 
 # use argparse to specify the range of questions to generate
 parser = argparse.ArgumentParser()
@@ -20,7 +19,7 @@ print(dataset)
 print(dataset[0])
 # randomly select a subset from the dataset
 dataset = dataset.shuffle(seed=4)
-dataset = dataset.select(range(args.index*100,(args.index+1)*100))
+dataset = dataset.select(range(args.index*10,(args.index+1)*10))
 
 def select_questions_batch(dataset, indices):
     """Selects a batch of questions from the dataset by indices."""
@@ -31,7 +30,7 @@ def select_questions_batch(dataset, indices):
 
 # Initialize the model
 model_name = "meta-llama/Llama-3.2-3B-Instruct"
-llm = LLM(model=model_name,tensor_parallel_size=2,gpu_memory_utilization=0.9)
+llm = LLM(model=model_name,tensor_parallel_size=1,gpu_memory_utilization=0.9)
 tokenizer = llm.get_tokenizer()
 
 def return_entropy(logprobs):
@@ -47,11 +46,6 @@ def return_entropy(logprobs):
         entropies.append(entropy)
     return entropies
 
-# print(outputs_step1[0].outputs[0].logprobs[0])
-# result = return_entropy(outputs_step1[0].outputs[0].logprobs) # first prompt, first generation
-# print(len(result))
-# print(result)
-
 def return_probs(logprobs):
     # Calculate entropy for each token, return a list of probs
     probs = []
@@ -60,7 +54,6 @@ def return_probs(logprobs):
         token_id = next(iter(logprobs[i]))
         probs.append(logprobs[i][token_id].logprob)
     return probs
-
 
 # Define parameters
 
@@ -114,7 +107,7 @@ for batch_idx in range(num_batches):
 
     print(f"Step 1 Batch {batch_idx + 1}/{num_batches} complete!")
 
-print("Step 1 complete! ")    
+print("Step 1 complete! ")
 time_step1_end = time.time()
 print(f"Time taken for Step 1: {time_step1_end - time_step1_begin:.2f}s")
 
@@ -161,20 +154,18 @@ for batch_idx in range(num_batches):
                 f.write(json.dumps(result) + "\n")
                 # delete result to free up memory
                 del result
-    
-
     print(f"Step 2 Batch {batch_idx + 1}/{num_batches} complete!")
     
-    # free up memory
-    gc.collect()  
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()     
-        torch.cuda.synchronize()  
-    
+    # # free up memory
+    # gc.collect()  
+    # if torch.cuda.is_available():
+    #     torch.cuda.empty_cache()     
+    #     torch.cuda.synchronize()  
+
 
 print("Batch inference complete! ")
 time_step2_end = time.time()
 print(f"Time taken for Step 2: {time_step2_end - time_step2_begin:.2f}s")
 
-
-
+if dist.is_initialized():
+    dist.destroy_process_group()
