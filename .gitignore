@@ -92,5 +92,5 @@ wandb/
 
 *.jsonl
 *.pt
-
-ssdscratch.code-workspace
+*.json
+*.code-workspace
