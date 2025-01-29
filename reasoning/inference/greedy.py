@@ -7,7 +7,7 @@ class GreedyInference:
     def __init__(self, model, tokenizer):
         self.model = model
         self.tokenizer = tokenizer
-        
+        torch.backends.cudnn.benchmark = True  # 启用 cuDNN benchmark 模式
         self.right_count = 0
         self.sample_size = 0
         
