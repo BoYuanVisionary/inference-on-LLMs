@@ -340,10 +340,19 @@ zero_single_proposal_prompt_gpt = '''
 zero_single_proposal_prompt_mistral = '''
 Given a science problem and an existing incomplete solution, your task is to complete the solution in a smooth and proper way.
 
-If no existing steps are provided, you need to briefly analyse the problem from scratch and then output the first step. Otherwise, you need to output the correct next step of the existing solution, following the ideas of the existing steps.
-Your output should be a single reasoning step that may include calculations, reasoning, choosing answers, etc.
-The output format is limited to: "Next step: ...". Where ... indicates omitted output information that you should fill in. 
-Here is the input, please follow the restricted output format.
+- If no existing steps are provided, you must briefly analyze the problem and output only the first step.  
+- If existing steps are provided, you must output exactly **one** correct next step that naturally follows from the previous ones.  
+- You **must** follow the given format and only output a single step.  
+
+**Strict Output Format:**  
+- Your response must always start with: `Next step: ...`  
+- The response must be limited to one reasoning step (e.g., a calculation, reasoning, or answer choice).  
+- Do **not** add any additional notes, explanations, or extra steps beyond the single required step.  
+- If the step results in a final answer, format the answer inside `\\boxed{}` (e.g., `\\boxed{42}`).  
+
+If there are multiple reasonable next steps, choose the most natural one based on the provided existing steps.  
+
+Here is the problem and the existing steps:  
 
 Problem: '''
 

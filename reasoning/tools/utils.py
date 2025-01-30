@@ -207,7 +207,7 @@ def load_model(model_name, device="cuda:0"):
     )
     
     tokenizer = AutoTokenizer.from_pretrained(model_name, padding_side = 'left')
-    tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.pad_token_id = tokenizer.eos_token_id
     return model, tokenizer
 
 def load_model_with_vllm(model_name, tensor_parallel_size = 2):

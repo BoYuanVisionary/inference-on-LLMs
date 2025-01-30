@@ -1,6 +1,6 @@
 import re
 import os
-from tasks.prompts import *
+from reasoning.tasks.prompts import *
 
 
 # data: question: str
@@ -69,7 +69,7 @@ class SearchTask(object):
     @staticmethod
     def zero_single_propose_wrap_mistral(x: str, y: str = '', step: int = 0) -> str:
         print('\n', '==============================', 'proposal', '==============================', '\nstep: ', step)
-        print('propose_prompt: \n', x + '\n已有步骤:\n' + y + '基于以上步骤，可能的当前步骤解法是:\n')
+        # print('propose_prompt: \n', x + '\n已有步骤:\n' + y + '基于以上步骤，可能的当前步骤解法是:\n')
         if not y:
             y = 'None\n'
         prompt = zero_single_proposal_prompt_mistral + x + '\nExisting Steps:\n' + y + '\nOutput:'
