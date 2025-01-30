@@ -22,14 +22,23 @@ class treeNode(object):
         self.se = 0  # soft estimation
 
     def __str__(self):
-        s = ["numVisits: %d" % self.numVisits, f'V:{self.V}', "possibleActions: %s" % (self.children.keys())]
+        s = ["numVisits: %d" % self.numVisits, 
+             f'V:{self.V}', "possibleActions: %s" % (self.children.keys()), 
+             f'he:{self.he}', f'se:{self.se}', 
+             f'isFullyExpanded:{self.isFullyExpanded}', 
+             f'visit_sequence:{self.visit_sequence}', 
+             f'final_ans_flag:{self.final_ans_flag}', 
+             f'isTerminal:{self.isTerminal}', 
+             f'on_final_route:{self.on_final_route}',
+             f'min_steps_to_correct:{self.min_steps_to_correct}', 
+             f'summary:{self.summary}']
         return "%s: {%s}" % (self.__class__.__name__, ', '.join(s))
 
     def append_children(self, new_pcd: str):
         node = treeNode(new_pcd, self, self.depth + 1)
         node.update_y_from_parent()
         self.children.update({new_pcd: node})
-        return self
+        return node
 
     def update_y_from_parent(self):
         if self.parent is None:
@@ -37,20 +46,13 @@ class treeNode(object):
         else:
             self.y = self.parent.y + self.pcd
 
-    def update_value(self, value):
-        self.V = value
 
-    def update_reflection(self, reflection):
-        self.reflection = reflection
-
-    def getBestV(self):  # Gets the subtree maximum value node
-        if not self.isFullyExpanded: # watch out the meaning of isFullyExpanded
-            return self, self.V
+    def getBestV(self):  # get the best value and the corresponding node
         max_V = self.V
         max_node = self
         for child in self.children.values():
             subNode, subValue = child.getBestV()
-            if subValue >= max_V:
+            if subValue > max_V:
                 max_V = subValue
                 max_node = subNode
         return max_node, max_V

@@ -132,29 +132,22 @@ def executeRound(root, mcts_task):
     print('选择节点阶段\n')
     flag, node = selectNode(root, mcts_task)
     if flag:
-        if mcts_task.sample_value != 'full':
-            return True, node, root
-        else:
-            node.reflection = '<end>'
+        return True, node, root
 
     print('-' * 40)
     print('扩充阶段\n')
-    if node.reflection == '<end>':
+    if node.isTerminal:
         print('跳过此阶段。\n')
     else:
         node = expand(node, mcts_task)
 
-    if mcts_task.reward_model_type == 'vm':
-        print('-' * 40)
-        print('模拟搜索阶段\n')
-        if node.reflection == '<end>':
-            print('跳过此阶段。\n')
-        else:
-            roll_node = getBestChild(node, mcts_task)
-            best_V = greedyPolicy(roll_node, mcts_task) if mcts_task.roll_policy == 'greedy' else randomPolicy(roll_node,
-                                                                                                               mcts_task)
-            roll_node.V = roll_node.V * (1 - mcts_task.alpha) + best_V * mcts_task.alpha
-            roll_node.numVisits += 1
+    print('-' * 40)
+    print('模拟搜索阶段\n')
+    roll_node = getBestChild(node, mcts_task)
+    best_V = greedyPolicy(roll_node, mcts_task) if mcts_task.roll_policy == 'greedy' else randomPolicy(roll_node,
+                                                                                                        mcts_task)
+    roll_node.V = roll_node.V * (1 - mcts_task.alpha) + best_V * mcts_task.alpha
+    roll_node.numVisits += 1
 
     print('-' * 40)
     print('反向传播阶段\n')
@@ -181,7 +174,7 @@ def selectNode(node, mcts_task):
 
 def expand(node: treeNode, mcts_task):
     if not node.reflection:
-        if mcts_task.use_reflection == 'common':
+        if mcts_task.use_reflection == 'common':update_value
             reflection = mcts_task.get_reflection(node.y, node.depth + 1)
         else:  # simple
             reflection = mcts_task.get_simple_reflection(node.y, node.depth + 1)

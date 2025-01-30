@@ -45,7 +45,6 @@ class MCTS_Task(SearchTask):
         self.answer = answer
         self.verify_method = verify_method
         self.reward_model_type = 'prm' if USE_PRM else 'vm'
-        self.lang = lang
         self.weighted_verify = weighted_verify
 
     def update_count(self):
@@ -71,7 +70,7 @@ class MCTS_Task(SearchTask):
 
     def get_next_step(self, y, step_n):
         if self.use_case_prompt:
-            prompt = self.single_propose_prompt_wrap(self.question, y, step_n)
+            prompt = self.single_propose_prompt_wrap(self.question, y, step_n) # this is to generate the next step
         else:
             if self.propose_method == 'gpt':
                 prompt = self.zero_single_propose_wrap_gpt(self.question, y, step_n, self.lang)
