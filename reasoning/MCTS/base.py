@@ -49,7 +49,7 @@ class treeNode(object):
         self.update_is_terminal()
     
     def update_is_terminal(self): # currently only for math problem
-        if extract_answer(self.y) is not None:
+        if extract_answer(self.y) is not None or '\boxed' in self.y:
             self.isTerminal = True
         else:
             self.isTerminal = False
@@ -94,40 +94,42 @@ class treeNode(object):
             cur_node = cur_node.parent
             
     def print_tree(self, indent=0, last=True, max_depth=None, show_fields=None):
-            """
-            可视化树结构
-            参数:
-                indent: 当前缩进量
-                last: 是否是父节点的最后一个子节点
-                max_depth: 最大显示深度
-                show_fields: 要显示的字段列表，默认['y','V','numVisits','isTerminal']
-            """
-            if max_depth is not None and self.depth > max_depth:
-                return
-                
-            default_fields = ['y', 'V', 'numVisits', 'isTerminal', 'depth']
-            fields = show_fields or default_fields
+        """
+        可视化树结构
+        参数:
+            indent: 当前缩进层级（从0开始）
+            last: 是否是父节点的最后一个子节点
+            max_depth: 最大显示深度
+            show_fields: 要显示的字段列表
+        """
+        if max_depth is not None and self.depth > max_depth:
+            return
             
 
-            info_parts = []
-            for field in fields:
-                value = getattr(self, field, 'N/A')
-                if isinstance(value, float):
-                    value = f"{value:.2f}"
-                info_parts.append(f"{field}={value}")
-            node_info = ", ".join(info_parts)
-            
+        default_fields = ['y', 'V', 'numVisits', 'isTerminal', 'depth']
+        fields = show_fields or default_fields
         
-            prefix = "    " * (indent-1) if indent > 0 else ""
-            if indent > 0:
-                prefix += "└── " if last else "├── "
-            
-            
-            print(f"{prefix}{node_info}")
-            
-            
-            count = len(self.children)
-            for i, (action, child) in enumerate(self.children.items()):
-                is_last = i == count - 1
-                child.print_tree(indent + 1, is_last, max_depth, show_fields)
+        info_parts = []
+        for field in fields:
+            value = getattr(self, field, 'N/A')
+            if isinstance(value, float):
+                value = f"{value:.2f}"
+            info_parts.append(f"{field}={value}")
+        node_info = ", ".join(info_parts)
+        
+        if indent == 0:  
+            prefix = ""
+        else:
+            prefix = "    " * (indent-1)  
+            if last:
+                prefix += "└── "
+            else:
+                prefix += "├── "
+
+        print(f"{prefix}{node_info}")
+        
+        count = len(self.children)
+        for i, (action, child) in enumerate(self.children.items()):
+            is_last = i == count - 1
+            child.print_tree(indent + 1, is_last, max_depth, show_fields)
 

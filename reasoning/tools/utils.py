@@ -8,6 +8,7 @@ import torch
 from vllm import LLM   
 import numpy as np
 import random
+from transformers import set_seed
 
 # def extract_boxed_answers(solutions_batch):
 #     # print('solutions_batch:',solutions_batch)
@@ -223,3 +224,4 @@ def seed_everything(seed):
     torch.backends.cudnn.deterministic = True
     np.random.seed(seed)
     random.seed(seed)
+    set_seed(seed)

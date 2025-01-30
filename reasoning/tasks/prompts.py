@@ -341,14 +341,14 @@ zero_single_proposal_prompt_mistral = '''
 Given a science problem and an existing incomplete solution, your task is to complete the solution in a smooth and proper way.
 
 - If no existing steps are provided, you must briefly analyze the problem and output only the first step.  
-- If existing steps are provided, you must output exactly **one** correct next step that naturally follows from the previous ones.  
-- You **must** follow the given format and only output a single step.  
+- If existing steps are sufficent to solve the problem, you must output the final answer and format the answer inside `\\boxed{}` (e.g., `\\boxed{42}`). 
+- If existing steps are not sufficent to solve the problem, you must output exactly **one** correct next step that naturally follows from the previous ones.  
+- You **must** follow the given format.
 
 **Strict Output Format:**  
 - Your response must always start with: `Next step: ...`  
 - The response must be limited to one reasoning step (e.g., a calculation, reasoning, or answer choice).  
-- Do **not** add any additional notes, explanations, or extra steps beyond the single required step.  
-- If the step results in a final answer, format the answer inside `\\boxed{}` (e.g., `\\boxed{42}`).  
+
 
 If there are multiple reasonable next steps, choose the most natural one based on the provided existing steps.  
 

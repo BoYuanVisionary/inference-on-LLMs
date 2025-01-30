@@ -30,36 +30,39 @@ def MCTS_search(mcts_task):
 
 def executeRound(root, mcts_task):
     # execute a selection-expansion-simulation-backpropagation round
-
+    #  recond the time for each phase
+    
+    time1 = time.time()
     print('-' * 40)
     print('selection phase\n')
     flag, node = selectNode(root, mcts_task)
     print(f'selected node: {node.y}')
     if flag:
         return True, node, root
-
+    time2 = time.time()
     print('-' * 40)
     print('expansion phase\n')
     if node.isTerminal:
         print('skip this phase.\n')
     else:
         node = expand(node, mcts_task)
-
+    time3 = time.time()
     print('-' * 40)
     print('simulation phase\n')
-    roll_node = getBestChild(node, mcts_task)
-    best_V = greedyPolicy(roll_node, mcts_task) if mcts_task.roll_policy == 'greedy' else randomPolicy(roll_node,
-                                                                                                        mcts_task)
-    roll_node.V = roll_node.V * (1 - mcts_task.alpha) + best_V * mcts_task.alpha
-    roll_node.numVisits += 1
-
+    if node.isTerminal:
+        print('skip this phase.\n')
+    else:
+        roll_node = getBestChild(node, mcts_task)
+        best_V = greedyPolicy(roll_node, mcts_task) if mcts_task.roll_policy == 'greedy' else randomPolicy(roll_node, mcts_task)
+        roll_node.V = roll_node.V * (1 - mcts_task.alpha) + best_V * mcts_task.alpha
+        roll_node.numVisits += 1
+    time4 = time.time()
     print('-' * 40)
     print('backpropagation phase\n')
-    back_propagate(node)
-    
+    back_propagate(node) #v even when the node is terminal, we still need to backpropagate the value
+    time5 = time.time()
     root.print_tree()
-    
-    
+    print(f'time for each phase: selection: {time2 - time1}, expansion: {time3 - time2}, simulation: {time4 - time3}, backpropagation: {time5 - time4}')
     
     return False, node, root
 
@@ -89,21 +92,23 @@ def getBestChild(node, mcts_task):
             bestNodes.append(child)
     return random.choice(bestNodes)
 
-def expand(node: treeNode, mcts_task): # should be careful on how to set isTerminal
+def expand(node: treeNode, mcts_task): # should be careful on how to set isTerminal, expand always choose a leaf node
  
-    actions = get_next_steps_expand(node, mcts_task) 
+    if node.isTerminal:
+        return node
+    else:
+        actions = get_next_steps_expand(node, mcts_task) 
+        for action in actions:
+            if action not in node.children.keys():
+                node.append_children(action)
+                child = node.children[action]
+                value = mcts_task.get_step_value(child.y)
+                child.V = value
 
-    for action in actions:
-        if action not in node.children.keys():
-            node.append_children(action)
-            child = node.children[action]
-            value = mcts_task.get_step_value(child.y)
-            child.V = value
+                child.visit_sequence = mcts_task.node_count # note that this is not the visit times
+                mcts_task.update_count()
 
-            child.visit_sequence = mcts_task.node_count # note that this is not the visit times
-            mcts_task.update_count()
-
-    return node
+        return node
 
 def greedyPolicy(node: treeNode, mcts_task):
     max_V = mcts_task.low
@@ -185,8 +190,9 @@ def MCTS(mcts_task):
             best_node, best_V = root.getBestV()
             print(f'在规定时间/轮次内未找到满足要求价值的解答，采用最高价值价值解答代替。\nSolution:{best_node.y}\n')
             best_terminal_node, best_terminal_V = root.getBestTerminalV()
-            print(f'最高价值解答:{best_terminal_node.y}\n') if best_terminal_node is not None else print('没有终端节点')
-            return best_node, -1, root
+            print(f'highest value:{best_terminal_node.V}\n') if best_terminal_node is not None else True
+            print(f'highest value node with terminal:{best_terminal_node.y}\n') if best_terminal_node is not None else print('no terminal node')
+            return best_node, -1, root 
 
 # think about if adding isFullyexpanded is necessary
 
@@ -202,7 +208,6 @@ def get_next_steps_expand(node: treeNode, mcts_task):
             continue
         next_steps.append(proposal)
     return next_steps
-
 
 def get_next_steps_roll(y: str, step_n: int, mcts_task):
     next_steps = []

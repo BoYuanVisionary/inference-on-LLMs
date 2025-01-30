@@ -159,6 +159,6 @@ class MCTS_Task(SearchTask):
         correctness =  math_equal(extracted_answer, ground_truth)
 
         final_answer = {'content': self.question, 'extracted_answer': extracted_answer,  'finish': finish,
-                        'real_answer': self.ground_truth, 'correctness': correctness}
+                        'real_answer': self.answer, 'correctness': correctness}
         return final_answer, root
            
