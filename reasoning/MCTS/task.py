@@ -3,7 +3,7 @@ from reasoning.tasks.science import SearchTask
 from reasoning.MCTS.base import treeNode
 from reasoning.MCTS.mcts import MCTS
 from reasoning.evaluator.math_grader import math_equal, extract_answer
-
+import time
 
 class MCTS_Task(SearchTask):
     def __init__(self, data, propose_method=None, value_method=None, branch=3, end_gate=0.9, roll_policy='greedy',
@@ -148,17 +148,18 @@ class MCTS_Task(SearchTask):
     def run(self):
         self.clear_cache()
         self.set_limit_type()
+        time_start = time.time()
         node, finish, root = MCTS(self)
- 
+        time_end = time.time()
         solution = node.y
-        
+        print(f'solution: {solution}\n')
         extracted_answer = extract_answer(solution)
         ground_truth = extract_answer(self.answer)
         if ground_truth is None:
             raise ValueError('ground_truth is None')
         correctness =  math_equal(extracted_answer, ground_truth)
 
-        final_answer = {'content': self.question, 'extracted_answer': extracted_answer,  'finish': finish,
-                        'real_answer': self.answer, 'correctness': correctness}
-        return final_answer, root
+        final_answer = {'question': self.question, 'extracted_answer': extracted_answer,  'finish': finish,
+                        'real_answer': ground_truth, 'correctness': correctness, 'time': time_end - time_start}
+        return final_answer
            

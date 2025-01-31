@@ -591,6 +591,12 @@ def extract_answer(string: str, extract_from_boxed: bool = True, extract_regex: 
     return None
 
 
+def extract_answer_v2(string: str):
+    pattern = r'(?<!\\)(\\boxed)'
+    new_text = re.sub(pattern, r'\\\1', string) # this is to make the \boxed to be \\boxed
+    print(new_text)
+    return extract_answer(new_text)
+
 class TimeoutException(Exception):
     pass
 

@@ -192,7 +192,10 @@ def MCTS(mcts_task):
             best_terminal_node, best_terminal_V = root.getBestTerminalV()
             print(f'highest value:{best_terminal_node.V}\n') if best_terminal_node is not None else True
             print(f'highest value node with terminal:{best_terminal_node.y}\n') if best_terminal_node is not None else print('no terminal node')
-            return best_node, -1, root 
+            if best_terminal_node is not None:
+                return best_terminal_node, -1, root
+            else:
+                return best_node, -1, root
 
 # think about if adding isFullyexpanded is necessary
 

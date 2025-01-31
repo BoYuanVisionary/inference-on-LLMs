@@ -77,7 +77,7 @@ class Model:
 
 
 class ValueModel_shepherd:
-    def __init__(self, device, low, good_token='+', bad_token='-', step_tag='ки'):
+    def __init__(self, device, low = 0, good_token='+', bad_token='-', step_tag='ки'):
 
         self.model_name = 'peiyi9979/math-shepherd-mistral-7b-prm'
         self.device = device
