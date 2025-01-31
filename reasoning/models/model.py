@@ -1,5 +1,8 @@
 from reasoning.tools.utils import load_model
 import random
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
+
 class Model:
     def __init__(self, model_name, device="cuda:0", 
                  temperature=0.7, top_p=0.9, num_return_sequences=1, 
@@ -40,11 +43,7 @@ class Model:
     
     def get_proposal(self, prompt):
         return self.get_local_response_llama(prompt)
-    
-    def get_value(self, prompt): # to implement
-        return random.random() / 2
-    
-    
+        
     def get_local_response_llama(self,query):
         cnt = 2
         all_response = ''
@@ -74,3 +73,84 @@ class Model:
         # split_response = all_response.split("Assistant:")[-1].strip().split('\n')
         split_response = all_response.split('\n')
         return split_response
+    
+
+
+class ValueModel_shepherd:
+    def __init__(self, device, low, good_token='+', bad_token='-', step_tag='ки'):
+
+        self.model_name = 'peiyi9979/math-shepherd-mistral-7b-prm'
+        self.device = device
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        self.model = AutoModelForCausalLM.from_pretrained(self.model_name).eval().to(self.device)
+        
+        
+        self.good_token = good_token
+        self.bad_token = bad_token
+        self.step_tag = step_tag
+        self.candidate_tokens = self.tokenizer.encode(f"{good_token} {bad_token}")[1:]  # [648, 387]
+        self.step_tag_id = self.tokenizer.encode(step_tag)[-1]
+        self.low = low
+    def format_steps(self, input_text):
+
+        steps = []
+        current_step = []
+        
+        for line in input_text.split('\n'):
+            line = line.strip()
+            if line.startswith('Step') and ':' in line:
+                
+                if current_step:
+                    steps.append(' '.join(current_step))
+                    current_step = []
+                step_header, _, content = line.partition(':')
+                current_step.append(f"{step_header.strip()}:")
+                if content:
+                    current_step.append(content.strip())
+            elif line and current_step:
+                
+                current_step.append(line.strip())
+        
+        if current_step:
+            steps.append(' '.join(current_step))
+        
+        
+        formatted_steps = []
+        for i, step in enumerate(steps, 1):
+            
+            step = step.replace(f"Step {i}:", f"Step {i}:")
+            
+            step = step.replace('##', '').strip()
+            
+            formatted_step = f"{step} ки"
+            formatted_steps.append(formatted_step)
+            
+        return '\n'.join(formatted_steps)
+            
+
+    def get_value(self, question, output): # this is to return the mean reward of all steps
+
+        try:
+            formatted_steps = self.format_steps(output)
+            input_text = f"{question} {formatted_steps}"  
+            input_ids = torch.tensor([self.tokenizer.encode(input_text)]).to(self.device)
+
+            with torch.no_grad():
+                
+                logits = self.model(input_ids).logits[:, :, self.candidate_tokens]
+                scores = logits.softmax(dim=-1)[:, :, 0]  
+                
+                step_mask = (input_ids == self.step_tag_id).cpu()
+                step_scores = scores[step_mask].tolist()
+
+            if not step_scores:
+                return self.low
+
+            avg_score = sum(step_scores) / len(step_scores)
+            last_step_score = step_scores[-1]
+            # print(step_scores)
+            return avg_score
+
+        except Exception as e:
+            print(f"wrong evaluation: {str(e)}")
+            return self.low

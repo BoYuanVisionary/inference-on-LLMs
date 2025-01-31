@@ -61,7 +61,7 @@ def executeRound(root, mcts_task):
     print('backpropagation phase\n')
     back_propagate(node) #v even when the node is terminal, we still need to backpropagate the value
     time5 = time.time()
-    root.print_tree()
+    # root.print_tree()
     print(f'time for each phase: selection: {time2 - time1}, expansion: {time3 - time2}, simulation: {time4 - time3}, backpropagation: {time5 - time4}')
     
     return False, node, root
@@ -69,7 +69,7 @@ def executeRound(root, mcts_task):
 def selectNode(node, mcts_task): # True means already found a solution with very high reward
     while len(node.children) > 0: 
         node = getBestChild(node, mcts_task)
-    if aboveEndGate(node, mcts_task):
+    if aboveEndGate(node, mcts_task) and node.isTerminal: # node.isTerminal is just for the development
         node.final_ans_flag = 1
         return True, node
     else:

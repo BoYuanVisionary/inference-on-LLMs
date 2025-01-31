@@ -7,7 +7,7 @@ from reasoning.evaluator.math_grader import math_equal, extract_answer
 
 class MCTS_Task(SearchTask):
     def __init__(self, data, propose_method=None, value_method=None, branch=3, end_gate=0.9, roll_policy='greedy',
-                 roll_branch=1, roll_forward_steps=3, time_limit=None, iteration_limit=None, exploration_constant=0.7,
+                 roll_branch=1, roll_forward_steps=2, time_limit=None, iteration_limit=None, exploration_constant=0.7,
                  alpha=0.5, inf=1.0, temperature=0.7, max_tokens=2048, seed=110, max_length=2048,
                  do_sample=True, max_new_tokens=256, use_case_prompt=False, low=0, high=1,
                  evaluate='', sample_value='simple', answer=None, verify_method='string', weighted_verify=False):
@@ -43,6 +43,8 @@ class MCTS_Task(SearchTask):
         
         assert propose_method is not None, "propose_method is required"
         assert value_method is not None, "value_method is required"
+        
+        
 
     def update_count(self):
         self.node_count += 1
@@ -137,10 +139,8 @@ class MCTS_Task(SearchTask):
     def get_step_value(self, y):
         if y in self.value_cache.keys():
             return self.value_cache[y]
-
-
-        prompt_answer = 'Problem: ' + self.question + '\nSolution:\n' + y
-        value = self.value_method.get_value(prompt_answer)
+        # print('Problem: ' + self.question + '\nSolution:\n' + y)
+        value = self.value_method.get_value(self.question, y)
         print(f'获得评分:{value}\n')
         self.value_cache.update({y: value})
         return value
