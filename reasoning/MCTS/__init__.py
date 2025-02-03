@@ -1,1 +1,0 @@
-# this folder is copied from https://github.com/THUDM/ReST-MCTS/tree/main/MCTS

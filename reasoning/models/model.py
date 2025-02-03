@@ -1,7 +1,8 @@
 from reasoning.tools.utils import load_model
 import random
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModel
 import torch
+import numpy as np
 
 class Model:
     def __init__(self, model_name, device="cuda:0", 
@@ -91,6 +92,7 @@ class ValueModel_shepherd:
         self.candidate_tokens = self.tokenizer.encode(f"{good_token} {bad_token}")[1:]  # [648, 387]
         self.step_tag_id = self.tokenizer.encode(step_tag)[-1]
         self.low = low
+        
     def format_steps(self, input_text):
 
         steps = []
@@ -128,7 +130,7 @@ class ValueModel_shepherd:
         return '\n'.join(formatted_steps)
             
 
-    def get_value(self, question, output): # this is to return the mean reward of all steps
+    def get_value(self, question, output): 
 
         try:
             formatted_steps = self.format_steps(output)
@@ -146,11 +148,99 @@ class ValueModel_shepherd:
             if not step_scores:
                 return self.low
 
-            avg_score = sum(step_scores) / len(step_scores)
+            
             last_step_score = step_scores[-1]
-            # print(step_scores)
-            return avg_score
+            return last_step_score
 
         except Exception as e:
             print(f"wrong evaluation: {str(e)}")
+            return self.low
+
+
+class ValueModel_qwen:
+    def __init__(self, device, low = 0):
+        self.device = device
+        self.model_name = "Qwen/Qwen2.5-Math-PRM-7B"
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True)
+        self.model = AutoModel.from_pretrained(
+            self.model_name,
+            device_map=self.device,
+            torch_dtype=torch.bfloat16,
+            trust_remote_code=True,
+        ).eval()
+        self.system_prompt = "Please reason step by step, and put your final answer within \\boxed{}."
+        self.low = low
+    def prepare_input(self, query, response_steps):
+        
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            {"role": "user", "content": query},
+            {"role": "assistant", "content": "<extra_0>".join(response_steps) + "<extra_0>"},
+        ]
+        
+        conversation_str = self.tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=False
+        )
+        
+        input_ids = self.tokenizer.encode(conversation_str, return_tensors="pt").to(self.model.device)
+        token_masks = (input_ids == self.tokenizer.encode("<extra_0>")[0])
+        
+        return input_ids, token_masks
+    
+    def compute_rewards(self, input_ids, token_masks):
+        
+        with torch.no_grad():
+            outputs = self.model(input_ids=input_ids)
+        
+        logits = outputs[0]
+        probabilities = torch.nn.functional.softmax(logits, dim=-1)
+        probabilities = probabilities * token_masks.unsqueeze(-1)
+        
+        batch_rewards = []
+        for i in range(probabilities.size(0)):
+            sample = probabilities[i]
+            positive_probs = sample[sample != 0].view(-1, 2)[:, 1]
+            batch_rewards.append(positive_probs.cpu().tolist())
+            
+        return batch_rewards
+    
+    def format_steps(self,input_text):
+
+        steps = []
+        current_step = []
+        
+        for line in input_text.split('\n'):
+            line = line.strip()
+            if line.startswith('Step') and ':' in line:
+                
+                if current_step:
+                    steps.append(' '.join(current_step))
+                    current_step = []
+                step_header, _, content = line.partition(':')
+                current_step.append(f"{step_header.strip()}:")
+                if content:
+                    current_step.append(content.strip())
+            elif line and current_step:     
+                current_step.append(line.strip())
+        if current_step:
+            steps.append(' '.join(current_step))
+         
+        formatted_steps = []
+        for i, step in enumerate(steps, 1):
+            step = step.replace(f"Step {i}:", "")
+            step = step.replace('##', '').strip()
+            formatted_steps.append(step)
+            
+        return formatted_steps
+                
+    def get_value(self, query, output):
+        try:
+            formatted_steps = self.format_steps(output)
+            input_ids, token_masks = self.prepare_input(query, formatted_steps)
+            step_rewards = self.compute_rewards(input_ids, token_masks)
+            return np.mean(step_rewards[0]) # last step reward or mean reward of all steps
+        except Exception as e:
+            print(f"Error in get_value: {str(e)}")
             return self.low

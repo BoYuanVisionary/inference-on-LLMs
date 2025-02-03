@@ -49,7 +49,7 @@ def executeRound(root, mcts_task):
     time3 = time.time()
     print('-' * 40)
     print('simulation phase\n')
-    if node.isTerminal:
+    if node.isTerminal or len(node.children) == 0:
         print('skip this phase.\n')
     else:
         roll_node = getBestChild(node, mcts_task)
