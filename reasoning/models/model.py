@@ -240,7 +240,7 @@ class ValueModel_qwen:
             formatted_steps = self.format_steps(output)
             input_ids, token_masks = self.prepare_input(query, formatted_steps)
             step_rewards = self.compute_rewards(input_ids, token_masks)
-            return np.mean(step_rewards[0]) # last step reward or mean reward of all steps
+            return step_rewards[0][-1] # last step reward is better
         except Exception as e:
             print(f"Error in get_value: {str(e)}")
             return self.low
