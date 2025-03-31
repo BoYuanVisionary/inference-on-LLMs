@@ -142,7 +142,7 @@ class VMCTS_Task(SearchTask):
             return self.value_cache[y]
         # print('Problem: ' + self.question + '\nSolution:\n' + y)
         value = self.value_method.get_value(self.question, y)
-        print(f'获得评分:{value}\n')
+        print(f'reward score:{value}\n')
         self.value_cache.update({y: value})
         return value
 

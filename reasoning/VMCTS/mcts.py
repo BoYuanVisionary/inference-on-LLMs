@@ -115,8 +115,7 @@ def expand(node: treeNode, mcts_task): # should be careful on how to set isTermi
                 child.visit_sequence = mcts_task.node_count # note that this is not the visit times
                 mcts_task.update_count()
         child_Vs = [child.V for child in node.children.values()]
-        node.variance = numpy.var(child_Vs)
-        
+        node.variance = numpy.var(child_Vs) if len(child_Vs) >= 1 else node.variance 
 
         return node
 
@@ -147,7 +146,7 @@ def greedyPolicy(node: treeNode, mcts_task):
         # if cur_ref == '<end>':
         #     break
     ######################
-    node.variance = numpy.var(all_values)
+    node.variance = numpy.var(all_values) if len(all_values) > 0 else None
     ######################
     return max_V
 
@@ -197,7 +196,7 @@ def var_back_propagate(node):
         child_vars = []
         child_vs = []
         for child in node.children.values():
-            if child.numVisits > 0:
+            if child.variance is not None and child.V is not None:
                 child_vars.append(child.variance)
                 child_vs.append(child.V)
         if len(child_vars) > 0:

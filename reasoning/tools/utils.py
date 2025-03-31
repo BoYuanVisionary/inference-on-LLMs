@@ -211,9 +211,9 @@ def load_model(model_name, device="cuda:0"):
     tokenizer.pad_token_id = tokenizer.eos_token_id
     return model, tokenizer
 
-def load_model_with_vllm(model_name, tensor_parallel_size = 2):
+def load_model_with_vllm(model_name, task, tensor_parallel_size, gpu_memory_utilization):
 
-    llm = LLM(model=model_name, tensor_parallel_size=tensor_parallel_size)
+    llm = LLM(model=model_name, tokenizer = model_name,tensor_parallel_size=tensor_parallel_size, gpu_memory_utilization = gpu_memory_utilization, task=task)
     tokenizer = llm.get_tokenizer()
     return llm, tokenizer
 

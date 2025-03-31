@@ -1,11 +1,9 @@
-import copy
-import numpy as np
 from reasoning.evaluator.math_grader import extract_answer
 
 class treeNode(object):
     def __init__(self, pcd, parent=None, depth=0):
         self.pcd = pcd  # str
-        self.y = ''  # str
+        self.y = ''  # str the whole partial solution up tp now
         self.parent = parent  # treeNode
         self.numVisits = 0  # int
         self.V = 0  # float
@@ -31,8 +29,7 @@ class treeNode(object):
              f'final_ans_flag:{self.final_ans_flag}', 
              f'isTerminal:{self.isTerminal}', 
              f'on_final_route:{self.on_final_route}',
-             f'min_steps_to_correct:{self.min_steps_to_correct}', 
-             f'summary:{self.summary}']
+             f'pcd:{self.pcd}']
         return "%s: {%s}" % (self.__class__.__name__, ', '.join(s))
 
     def append_children(self, new_pcd: str):
@@ -95,18 +92,17 @@ class treeNode(object):
             
     def print_tree(self, indent=0, last=True, max_depth=None, show_fields=None):
         """
-        可视化树结构
-        参数:
-            indent: 当前缩进层级（从0开始）
-            last: 是否是父节点的最后一个子节点
-            max_depth: 最大显示深度
-            show_fields: 要显示的字段列表
+        Visualize the tree structure
+        Parameters:
+            indent: Current indentation level (starting from 0)
+            last: Whether it is the last child node of the parent node
+            max_depth: Maximum display depth
+            show_fields: List of fields to display
         """
         if max_depth is not None and self.depth > max_depth:
             return
             
-
-        default_fields = ['y', 'V', 'numVisits', 'isTerminal', 'depth']
+        default_fields = ['pcd', 'V', 'numVisits', 'isTerminal', 'depth']
         fields = show_fields or default_fields
         
         info_parts = []

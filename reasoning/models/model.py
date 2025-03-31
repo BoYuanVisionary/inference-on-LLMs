@@ -1,46 +1,59 @@
+# This file contains Qwen and Llama models loaded via transformers
+
+
 from reasoning.tools.utils import load_model
 import random
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModel
 import torch
-import numpy as np
 
-class Model:
+
+class BasePolicyModel:
+    def __init__(self, model_name, device="cuda:0"):
+        self.model, self.tokenizer = load_model(model_name, device)
+        self.device = device
+    
+    def get_proposal(self, prompt):
+        pass
+
+    def test(self):
+        # test the model with a simple query to see if the format is correct
+        query = r"""Given a science problem and an existing incomplete solution, your task is to complete the solution in a smooth and proper way.
+
+            - If no existing steps are provided, you must briefly analyze the problem and output only the first step.  
+            - If existing steps are sufficent to solve the problem, you must output the final answer and format the answer inside `\\boxed{}` (e.g., `\\boxed{42}`). 
+            - If existing steps are not sufficent to solve the problem, you must output exactly **one** correct next step that naturally follows from the previous ones.  
+            - You **must** follow the given format.
+
+            **Strict Output Format:**  
+            - Your response must always start with: `Next step: ...`  
+            - The response must be limited to one reasoning step (e.g., a calculation, reasoning, or answer choice).  
+
+
+            If there are multiple reasonable next steps, choose the most natural one based on the provided existing steps.  
+
+            Here is the problem and the existing steps:  
+
+            Problem: How many positive whole-number divisors does 196 have?
+            Existing Steps:
+            Step 1: Factorize 196 into its prime factors to determine its divisors. To find the number of positive whole-number divisors of 196, we first need to factorize 196 into its prime factors.  ##
+            Step 2: The prime factorization of 196 is $2^2 \cdot 7^2$.
+            Step 3: Understand the prime factorization of 196 The prime factorization of 196 is given as $2^2 \cdot 7^2$. This tells us that the number 196 has two distinct prime factors, 2 and 7, with 2 raised to the power of 2 and 7 raised to the power of 2.  ##
+
+            Output:"""
+        response = self.get_proposal(query)
+        print(f'response: {response}')
+
+class LlamaPolicyModel(BasePolicyModel): # model should be used for all Llama, Qwen and Qwen-Distall-R1 models
     def __init__(self, model_name, device="cuda:0", 
                  temperature=0.7, top_p=0.9, num_return_sequences=1, 
                  max_new_tokens=128, do_sample=True, max_tokens=None):
-        self.model, self.tokenizer = load_model(model_name, device)
-        self.device = device
+        super().__init__(model_name, device)
         self.temperature = temperature
         self.top_p = top_p
         self.num_return_sequences = num_return_sequences
         self.max_new_tokens = max_new_tokens
         self.do_sample = do_sample
         self.max_tokens = max_tokens
-    
-    def update_generation_settings(self, **kwargs):
-        self.temperature = kwargs.get("temperature", 0.7)
-        self.top_p = kwargs.get("top_p", 0.9)
-        self.num_return_sequences = kwargs.get("num_return_sequences", 1)
-        self.max_new_tokens = kwargs.get("max_new_tokens", 128)
-        self.do_sample = kwargs.get("do_sample", True)
-        self.max_tokens = kwargs.get("max_tokens", 1024)
-
-    # def generate(self, prompt):
-    #     print(prompt)
-    #     inputs = self.tokenizer(prompt, return_tensors="pt",padding=True,truncation=True).to(self.device)
-    #     outputs = self.model.generate(
-    #         **inputs,
-    #         temperature=self.temperature,
-    #         top_p=self.top_p,
-    #         num_return_sequences=self.num_return_sequences,
-    #         max_new_tokens=self.max_new_tokens,
-    #         do_sample=self.do_sample,
-    #         max_tokens=self.max_tokens,
-    #         pad_token_id=self.tokenizer.eos_token_id
-    #         )
-    #     generation = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
-    #     print(generation[len(prompt)-1:])
-    #     return generation[len(prompt)-1:]
     
     def get_proposal(self, prompt):
         return self.get_local_response_llama(prompt)
@@ -60,8 +73,11 @@ class Model:
         attention_mask = data['attention_mask'].to(self.device)
         while cnt:
             try:
+                print(f'input_ids: {input_ids}')
+                print(f'attention_mask: {attention_mask}')
                 output = self.model.generate(input_ids, attention_mask=attention_mask, do_sample=self.do_sample, max_new_tokens=self.max_new_tokens, temperature=self.temperature, eos_token_id=terminators, pad_token_id=self.tokenizer.eos_token_id)
                 ori_string = self.tokenizer.decode(output[0], skip_special_tokens=False)
+                print(f'ori_string: {ori_string}')
                 processed_string = ori_string.split('<|end_header_id|>')[2].strip().split('<|eot_id|>')[0].strip()
                 response = processed_string.split('<|end_of_text|>')[0].strip()
                 all_response = response
@@ -76,8 +92,57 @@ class Model:
         return split_response
     
 
+class QwenPolicyModel(BasePolicyModel): # model should be used for all Llama, Qwen and Qwen-Distall-R1 models
+    def __init__(self, model_name, device="cuda:0", 
+                 temperature=0.7, top_p=0.9, num_return_sequences=1, 
+                 max_new_tokens=128, do_sample=True, max_tokens=None):
+        super().__init__(model_name, device)
+        self.temperature = temperature
+        self.top_p = top_p
+        self.num_return_sequences = num_return_sequences
+        self.max_new_tokens = max_new_tokens
+        self.do_sample = do_sample
+        self.max_tokens = max_tokens
+    
+    def get_proposal(self, prompt):
+        return self.get_local_response_qwen(prompt)
+        
+    def get_local_response_qwen(self,query):
+        cnt = 2
+        all_response = ''
+        # messages = [{"role": "user", "content": query}]
+        # data = tokenizer.apply_chat_template(messages, return_tensors="pt").cuda()
+        terminators = [
+            self.tokenizer.eos_token_id,
+            self.tokenizer.convert_tokens_to_ids("<|eot_id|>")
+        ]
+        message = '<|start_header_id|>user<|end_header_id|>\n\n{query}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n'.format(query=query)
+        data = self.tokenizer.encode_plus(message, return_tensors='pt')
+        input_ids = data['input_ids'].to(self.device)
+        attention_mask = data['attention_mask'].to(self.device)
+        while cnt:
+            try:
+                print(f'input_ids: {input_ids}')
+                print(f'attention_mask: {attention_mask}')
+                output = self.model.generate(input_ids, attention_mask=attention_mask, do_sample=self.do_sample, max_new_tokens=self.max_new_tokens, temperature=self.temperature, eos_token_id=terminators, pad_token_id=self.tokenizer.eos_token_id)
+                ori_string = self.tokenizer.decode(output[0], skip_special_tokens=False)
+                print(f'ori_string: {ori_string}')
+                processed_string = ori_string.split('<|end_header_id|>')[2].strip().split('<|eot_id|>')[0].strip()
+                response = processed_string.split('<|end_of_text|>')[0].strip()
+                all_response = response
+                break
+            except Exception as e:
+                print(f'Error:{e}, obtain response again...\n')
+                cnt -= 1
+        if not cnt:
+            return []
+        # split_response = all_response.split("Assistant:")[-1].strip().split('\n')
+        split_response = all_response.split('\n')
+        return split_response
 
-class ValueModel_shepherd:
+
+
+class ValueModel_shepherd: # not very good use the next one instead
     def __init__(self, device, low = 0, good_token='+', bad_token='-', step_tag='ки'):
 
         self.model_name = 'peiyi9979/math-shepherd-mistral-7b-prm'

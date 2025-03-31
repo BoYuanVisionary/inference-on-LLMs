@@ -1,6 +1,6 @@
 
 from reasoning.models.model import Model
-from reasoning.MCTS.task import MCTS_Task
+from reasoning.VMCTS.task import VMCTS_Task
 from reasoning.tools.utils import seed_everything
 seed_everything(110)
 from reasoning.models.model import ValueModel_shepherd, ValueModel_qwen
@@ -25,8 +25,7 @@ def get_args():
 args = get_args()
 
 
-wandb.init(project='efficient_reasoning', name='mcts',config=args.__dict__)
-
+wandb.init(project='efficient_reasoning', name='vmcts',config=args.__dict__)
 
 
 seed_everything(args.seed)
@@ -51,7 +50,7 @@ for i in range(100):
     question = problems[i]
     answer = solutions[i]
 
-    task = MCTS_Task(question, answer = answer, propose_method=policy_model, value_method=reward_model,
+    task = VMCTS_Task(question, answer = answer, propose_method=policy_model, value_method=reward_model,
                      iteration_limit=args.iteration_limit, end_gate=args.end_gate, branch=args.branch,
                      roll_branch=args.roll_branch, roll_forward_steps=args.roll_forward_steps)
     time_start = time.time()

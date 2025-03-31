@@ -2,15 +2,36 @@ import time
 import math
 import random
 import numpy
-from functools import partial
-import copy
 from reasoning.MCTS.base import treeNode
-
+import warnings
 
 def MCTS_search(mcts_task):
+    """
+    Performs the Monte Carlo Tree Search algorithm until time/iteration limit is reached or solution is found.
+    
+    This function implements the main MCTS loop that repeatedly executes selection-expansion-simulation-backpropagation
+    rounds until either:
+    1. A solution is found (a node with value above the end gate threshold)
+    2. Time limit is reached (if limit_type is 'time')
+    3. Iteration limit is reached (if limit_type is not 'time')
+    
+    Args:
+        mcts_task: An object containing MCTS parameters, domain functions, and search limits
+                   (time_limit or iteration_limit based on limit_type)
+    
+    Returns:
+        tuple: (root, solution_node, search_metric) where:
+            - root: The root node of the search tree
+            - solution_node: Node representing the solution if found, otherwise None
+            - search_metric: Time elapsed (in seconds) if using time limit, 
+                            iteration count (starting from 1) if using iteration limit,
+                            or None if no solution found
+    """
+    
     root = treeNode('')
-
+    # If time limit is set, use time limit, otherwise use iteration limit
     if mcts_task.limit_type == 'time':
+        # mcts_task.time_limit is in milliseconds
         timeLimit = time.time() + mcts_task.time_limit / 1000
         time_start = time.time()
         while time.time() < timeLimit:
@@ -29,27 +50,28 @@ def MCTS_search(mcts_task):
     return root, None, None
 
 def executeRound(root, mcts_task):
+    
     # execute a selection-expansion-simulation-backpropagation round
-    #  recond the time for each phase
+    # record the time for each phase
     
     time1 = time.time()
     print('-' * 40)
     print('selection phase\n')
     flag, node = selectNode(root, mcts_task)
     print(f'selected node: {node.y}')
-    if flag:
+    if flag: # If a high-value node is found, return the node and the root
         return True, node, root
     time2 = time.time()
     print('-' * 40)
     print('expansion phase\n')
-    if node.isTerminal:
+    if node.isTerminal: # skip this phase if the node is terminal
         print('skip this phase.\n')
     else:
         node = expand(node, mcts_task)
     time3 = time.time()
     print('-' * 40)
     print('simulation phase\n')
-    if node.isTerminal or len(node.children) == 0:
+    if node.isTerminal or len(node.children) == 0: # skip this phase if the node is terminal or has no children
         print('skip this phase.\n')
     else:
         roll_node = getBestChild(node, mcts_task)
@@ -59,11 +81,12 @@ def executeRound(root, mcts_task):
     time4 = time.time()
     print('-' * 40)
     print('backpropagation phase\n')
-    back_propagate(node) #v even when the node is terminal, we still need to backpropagate the value
+    back_propagate(node) # Need to update numVisits even for terminal nodes
     time5 = time.time()
     # root.print_tree()
     print(f'time for each phase: selection: {time2 - time1}, expansion: {time3 - time2}, simulation: {time4 - time3}, backpropagation: {time5 - time4}')
-    
+    # print the tree
+    root.print_tree()
     return False, node, root
 
 def selectNode(node, mcts_task): # True means already found a solution with very high reward
@@ -94,7 +117,7 @@ def getBestChild(node, mcts_task):
 
 def expand(node: treeNode, mcts_task): # should be careful on how to set isTerminal, expand always choose a leaf node
  
-    if node.isTerminal:
+    if node.isTerminal: 
         return node
     else:
         actions = get_next_steps_expand(node, mcts_task) 
@@ -127,12 +150,6 @@ def greedyPolicy(node: treeNode, mcts_task):
         value = values[idx]
         if value > max_V:
             max_V = value
-        # if mcts_task.use_reflection == 'common':
-        #     cur_ref = mcts_task.get_reflection(strs, cur_step)
-        # else:
-        #     cur_ref = mcts_task.get_simple_reflection(strs, cur_step)
-        # if cur_ref == '<end>':
-        #     break
     return max_V
 
 def randomPolicy(node: treeNode, mcts_task):
@@ -157,12 +174,6 @@ def randomPolicy(node: treeNode, mcts_task):
         value = mcts_task.get_step_value(strs)
         if value > max_V:
             max_V = value
-        # if mcts_task.use_reflection == 'common':
-        #     cur_ref = mcts_task.get_reflection(strs, cur_step)
-        # else:
-        #     cur_ref = mcts_task.get_simple_reflection(strs, cur_step)
-        # if cur_ref == '<end>':
-        #     break
     return max_V
 
 def back_propagate(node):
@@ -176,27 +187,64 @@ def back_propagate(node):
         node = node.parent
 
 def MCTS(mcts_task):
-    root, node, finish = MCTS_search(mcts_task)
+    """
+    Main function to perform Monte Carlo Tree Search (MCTS).
+    
+    This function drives the MCTS process by calling MCTS_search to build the search tree,
+    then returns the best solution found based on various criteria.
+    
+    Args:
+        mcts_task: An object containing MCTS parameters and domain-specific functions
+                   for generating steps, evaluating states, etc.
+    
+    Returns:
+        dict: {'best_node': best_node, 'best_terminal_node': best_terminal_node, 'finish': finish, 'root': root} where:
+            - best_node: The node representing the best solution found (may not be terminal)
+            - best_terminal_node: The node representing the best solution found with terminal
+            - finish: If solution found, the time taken or iteration count (start from 1); otherwise None
+            - root: The root node of the search tree
+    """
+    # Run the search algorithm to build the tree
+    # If 'finish' is not None, it is either running time or the iteration index for finding the solution
 
-    if mcts_task.sample_value == 'full':
-        print('采样完成。\n')
+    root, node, finish = MCTS_search(mcts_task)
+    
+    # This should be removed
+    if mcts_task.sample_value == 'full': 
+        print('sampling completed.\n')
+        raise NotImplementedError('sampling is not implemented yet')
         return None, -1, root
     else:
+        # Case 1: Solution successfully found within limits
         if finish is not None:
-            print(f'已找到最终解!\nSolution:{node.y}\n')
+            print(f'Solution found!\nSolution:{node.y}\n')
             return node, finish, root
-
+        # Case 2: No solution found within the time/iteration limit
         else:
+            # Find the node with the highest value regardless of being terminal
             best_node, best_V = root.getBestV()
-            print(f'在规定时间/轮次内未找到满足要求价值的解答，采用最高价值价值解答代替。\nSolution:{best_node.y}\n')
-            best_terminal_node, best_terminal_V = root.getBestTerminalV()
-            print(f'highest value:{best_terminal_node.V}\n') if best_terminal_node is not None else True
-            print(f'highest value node with terminal:{best_terminal_node.y}\n') if best_terminal_node is not None else print('no terminal node')
-            if best_terminal_node is not None:
-                return best_terminal_node, -1, root
+            if not best_node.isTerminal:
+                print('The highest value solution is not terminal')
+            if best_node is not None:
+                print(f'The highest value solution is:{best_node.y}')
+                print(f'The highest value is:{best_V}\n')
             else:
-                return best_node, -1, root
+                warnings.warn('No highest value solution found. This is not expected. Check if the input is legal.')
 
+            # Find the terminal node with the highest value
+            best_terminal_node, best_terminal_V = root.getBestTerminalV()
+            # Consistency check
+            if best_node.y == best_terminal_node.y and best_node.isTerminal:
+                raise ValueError('The highest value node is terminal, but the highest value node with terminal is another node')
+
+            if best_terminal_node is not None:
+                print(f'The highest value node with terminal:{best_terminal_node.y}\n')
+                print(f'The highest value:{best_terminal_V}\n')
+            else:
+                print('No terminal node found')
+
+    return {'best_node': best_node, 'best_terminal_node': best_terminal_node, 'finish': finish, 'root': root}
+            
 # think about if adding isFullyexpanded is necessary
 
 def get_next_steps_expand(node: treeNode, mcts_task):
