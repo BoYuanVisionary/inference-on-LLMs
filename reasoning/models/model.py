@@ -1,6 +1,4 @@
 # This file contains Qwen and Llama models loaded via transformers
-
-
 from reasoning.tools.utils import load_model
 import random
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModel
@@ -73,8 +71,8 @@ class LlamaPolicyModel(BasePolicyModel): # model should be used for all Llama, Q
         attention_mask = data['attention_mask'].to(self.device)
         while cnt:
             try:
-                print(f'input_ids: {input_ids}')
-                print(f'attention_mask: {attention_mask}')
+                # print(f'input_ids: {input_ids}')
+                # print(f'attention_mask: {attention_mask}')
                 output = self.model.generate(input_ids, attention_mask=attention_mask, do_sample=self.do_sample, max_new_tokens=self.max_new_tokens, temperature=self.temperature, eos_token_id=terminators, pad_token_id=self.tokenizer.eos_token_id)
                 ori_string = self.tokenizer.decode(output[0], skip_special_tokens=False)
                 print(f'ori_string: {ori_string}')
@@ -300,12 +298,21 @@ class ValueModel_qwen:
             
         return formatted_steps
                 
-    def get_value(self, query, output):
+    def get_value(self, query, output): # used in the code of MCTS
         try:
             formatted_steps = self.format_steps(output)
             input_ids, token_masks = self.prepare_input(query, formatted_steps)
             step_rewards = self.compute_rewards(input_ids, token_masks)
             return step_rewards[0][-1] # last step reward is better
+        except Exception as e:
+            print(f"Error in get_value: {str(e)}")
+            return self.low
+
+    def get_value_with_steps(self, query, steps): # used in the code of SamplingTree
+        try:
+            input_ids, token_masks = self.prepare_input(query, steps)
+            step_rewards = self.compute_rewards(input_ids, token_masks)
+            return step_rewards[0]
         except Exception as e:
             print(f"Error in get_value: {str(e)}")
             return self.low

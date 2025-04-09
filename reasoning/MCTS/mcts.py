@@ -233,17 +233,18 @@ def MCTS(mcts_task):
 
             # Find the terminal node with the highest value
             best_terminal_node, best_terminal_V = root.getBestTerminalV()
-            # Consistency check
-            if best_node.y == best_terminal_node.y and best_node.isTerminal:
-                raise ValueError('The highest value node is terminal, but the highest value node with terminal is another node')
 
             if best_terminal_node is not None:
+                # Consistency check
+                if best_node.y != best_terminal_node.y and best_node.isTerminal:
+                    raise ValueError('The highest value node is terminal, but the highest value node with terminal is another node')
                 print(f'The highest value node with terminal:{best_terminal_node.y}\n')
                 print(f'The highest value:{best_terminal_V}\n')
             else:
                 print('No terminal node found')
 
-    return {'best_node': best_node, 'best_terminal_node': best_terminal_node, 'finish': finish, 'root': root}
+            final_node = best_terminal_node if best_terminal_node else best_node
+            return final_node, finish, root
             
 # think about if adding isFullyexpanded is necessary
 

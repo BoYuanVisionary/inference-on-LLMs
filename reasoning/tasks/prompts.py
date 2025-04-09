@@ -42,9 +42,7 @@ Given a science problem and an existing incomplete solution, your task is to com
 
 If there are multiple reasonable next steps, choose the most natural one based on the provided existing steps.  
 
-Here is the problem and the existing steps:  
-
-Problem: '''
+'''
 
 zero_single_proposal_prompt_gpt_en = '''
 Given a science problem, you need to answer the problem based on your existing knowledge. The input may include some existing steps to solve the question and you should continue to complete the solution based on these existing steps.

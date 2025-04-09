@@ -185,7 +185,6 @@ from transformers import set_seed
 #         probs.append(logprobs[i][token_id].logprob)
 #     return probs
 
-
 def load_jsonl(file_path):
     data = []
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -225,3 +224,4 @@ def seed_everything(seed):
     np.random.seed(seed)
     random.seed(seed)
     set_seed(seed)
+

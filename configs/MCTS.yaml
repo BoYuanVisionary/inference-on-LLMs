@@ -1,0 +1,26 @@
+config_name: Qwen2.5-Math-1.5B-Instruct-MCTS
+
+# System parameters
+batch_size: 10
+cuda_device_ids: [0, 1, 2, 3]
+seed: 42
+
+# Dataset and model parameters
+data_path: HuggingFaceH4/MATH-500
+model_name: Qwen/Qwen2.5-Math-1.5B-Instruct
+# The folllowing is the default system prompt for llama-3.1-8b-instruct since its weak intrction following ability 
+# and we have to enforce it to generate the correct format
+ 
+system_prompt: |
+  Solve the folloiwng math problem and you must strictly follow the instructions below:
+  1. Reason step by step
+  2. You must put your final answer within \boxed{} in the end
+# Inference parameters
+max_new_tokens: 512
+temperature: 0
+top_p: 1
+
+# MCTS parameters
+experiment_name: MCTS_experiment
+inference_method: MCTS
+

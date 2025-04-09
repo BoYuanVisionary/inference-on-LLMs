@@ -72,8 +72,9 @@ class SearchTask(object):
         # print('propose_prompt: \n', x + '\n已有步骤:\n' + y + '基于以上步骤，可能的当前步骤解法是:\n')
         if not y:
             y = 'None\n'
-        prompt = zero_single_proposal_prompt_mistral + x + '\nExisting Steps:\n' + y + '\nOutput:'
-        return prompt
+        question = "Here is the problem and the existing steps:\n Problem: "+ x + '\nExisting Steps:\n' + y + '\nOutput:'
+        return zero_single_proposal_prompt_mistral, question
+
 
     @staticmethod
     def zero_single_propose_wrap_gpt(x: str, y: str = '', step: int = 0, lang: str = 'zh') -> str:

@@ -1,0 +1,30 @@
+config_name: Qwen2.5-7B-Instruct-majority_16
+
+# System parameters
+batch_size: 10
+cuda_device_ids: [0, 1]
+seed: 42
+
+# Dataset and model parameters
+data_path: HuggingFaceH4/MATH-500
+model_name: Qwen/Qwen2.5-7B-Instruct
+# The folllowing is the default system prompt for llama-3.1-8b-instruct since its weak intrction following ability 
+# and we have to enforce it to generate the correct format
+ 
+system_prompt: |
+  Solve the folloiwng math problem and you must strictly follow the instructions below:
+  1. Reason step by step
+  2. You must put your final answer within \boxed{} in the end
+# Inference parameters
+max_new_tokens: 2048
+temperature: 0.7
+top_p: 0.9
+
+# majority parameters
+experiment_name: majority_experiment
+inference_method: majority
+num_return_sequences: 16
+
+# wandb parameters
+wandb_project: efficient_reasoning
+

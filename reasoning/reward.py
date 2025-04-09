@@ -9,7 +9,6 @@ class Reward:
     def score_with_openai(self, text):
         raise NotImplementedError('score_with_openai is not implemented')
 
-
     def score_with_log_prob(self, text):
         inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
         with torch.no_grad():

@@ -10,10 +10,79 @@ import json
 # For now, just use cuda_visible_devices and assume both reward model and proposal models use all the visible GPUs.
 
 # to do: check if it works in the mcts task
-class LlamaPolicy:
+# class LlamaPolicy:
+#     def __init__(self, model_name, 
+#                  temperature=0.7, top_p=0.9, 
+#                  max_new_tokens=128, do_sample=True, gpu_memory_utilization=1):
+#         self.model, self.tokenizer = load_model_with_vllm(model_name, task = 'auto', 
+#                                                           tensor_parallel_size = self.__gpu_count(), gpu_memory_utilization=gpu_memory_utilization)
+#         self.temperature = temperature
+#         self.top_p = top_p
+#         self.max_new_tokens = max_new_tokens
+#         self.do_sample = do_sample
+        
+#         self.sampling_params = SamplingParams(
+#             temperature=self.temperature,
+#             top_p=self.top_p,
+#             max_tokens=self.max_new_tokens,
+#             stop_token_ids=[self.tokenizer.eos_token_id,
+#                             self.tokenizer.convert_tokens_to_ids("<|eot_id|>")],
+#             skip_special_tokens=False,
+#         )
+        
+#     def __gpu_count(self):
+#         return torch.cuda.device_count()
+    
+#     def get_proposal(self, prompt, n_responses):
+#         return self.get_local_response_llama_vllm(prompt, n_responses)
+        
+#     def get_local_response_llama_vllm(self, query,n_responses): # batch generation
+        
+#         cnt = 2
+#         split_response = [[''] for _ in range(n_responses)]
+#         self.sampling_params.n = n_responses
+#         message = '<|start_header_id|>user<|end_header_id|>\n\n{query}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n'.format(query=query)
+#         while cnt:
+#             try:
+#                 outputs = self.model.generate(message, sampling_params=self.sampling_params)
+#                 split_response = [outputs[0].outputs[i].text.strip().split('\n\n') for i in range(n_responses)]
+#                 break
+#             except Exception as e:
+#                 print(f'Error:{e}, obtain response again...\n')
+#                 cnt -= 1
+
+#         return split_response
+
+#     def test(self):
+#         # test the model with a simple query to see if the format is correct
+#         query = r"""Given a science problem and an existing incomplete solution, your task is to complete the solution in a smooth and proper way.
+
+#             - If no existing steps are provided, you must briefly analyze the problem and output only the first step.  
+#             - If existing steps are sufficent to solve the problem, you must output the final answer and format the answer inside `\\boxed{}` (e.g., `\\boxed{42}`). 
+#             - If existing steps are not sufficent to solve the problem, you must output exactly **one** correct next step that naturally follows from the previous ones.  
+#             - You **must** follow the given format.
+
+#             **Strict Output Format:**  
+#             - Your response must always start with: `Next step: ...`  
+#             - The response must be limited to one reasoning step (e.g., a calculation, reasoning, or answer choice).  
+
+#             If there are multiple reasonable next steps, choose the most natural one based on the provided existing steps.  
+
+#             Here is the problem and the existing steps:  
+
+#             Problem: How many positive whole-number divisors does 196 have?
+#             Existing Steps:
+#             Step 1: Factorize 196 into its prime factors to determine its divisors. To find the number of positive whole-number divisors of 196, we first need to factorize 196 into its prime factors.  ##
+#             Step 2: The prime factorization of 196 is $2^2 \cdot 7^2$.
+
+#             Output:"""
+#         response = self.get_proposal(query, n_responses=1)
+#         print(f'response: {response}')
+
+class QwenPolicy:
     def __init__(self, model_name, 
                  temperature=0.7, top_p=0.9, 
-                 max_new_tokens=128, do_sample=True, gpu_memory_utilization=1):
+                 max_new_tokens=512, do_sample=True, gpu_memory_utilization=1):
         self.model, self.tokenizer = load_model_with_vllm(model_name, task = 'auto', 
                                                           tensor_parallel_size = self.__gpu_count(), gpu_memory_utilization=gpu_memory_utilization)
         self.temperature = temperature
@@ -33,25 +102,91 @@ class LlamaPolicy:
     def __gpu_count(self):
         return torch.cuda.device_count()
     
-    def get_proposal(self, prompt, n_responses):
-        return self.get_local_response_llama_vllm(prompt, n_responses)
+    def get_proposal(self, system_prompt, query, n_responses=1, partial_solutions=None):
+        if partial_solutions is None:
+            return self.get_local_response_llama_vllm(system_prompt, query, n_responses)
+        else:
+            return self.get_local_response_llama_vllm_completion(system_prompt, query, partial_solutions, n_responses)
         
-    def get_local_response_llama_vllm(self, query,n_responses): # batch generation
+    def get_local_response_llama_vllm(self, system_prompt, query, n_responses): # batch generation
         
         cnt = 2
-        split_response = [[''] for _ in range(n_responses)]
         self.sampling_params.n = n_responses
-        message = '<|start_header_id|>user<|end_header_id|>\n\n{query}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n'.format(query=query)
+        conversations = [
+            {
+                "role": "system",
+                "content": system_prompt
+            },
+            {
+                "role": "user",
+                "content": query
+            }
+        ] 
         while cnt:
             try:
-                outputs = self.model.generate(message, sampling_params=self.sampling_params)
-                split_response = [outputs[0].outputs[i].text.strip().split('\n\n') for i in range(n_responses)]
+                outputs = self.model.chat(conversations, sampling_params=self.sampling_params)
+                split_response = [outputs[0].outputs[i].text for i in range(n_responses)]
                 break
             except Exception as e:
                 print(f'Error:{e}, obtain response again...\n')
                 cnt -= 1
 
         return split_response
+    
+    def get_local_response_llama_vllm_completion(self, system_prompt, query, partial_solutions, n_responses): # batch generation
+        
+        cnt = 2
+        self.sampling_params.n = n_responses
+        conversations = [
+            {
+                "role": "system",
+                "content": system_prompt
+            },
+            {
+                "role": "user",
+                "content": query
+            },
+            {
+                "role": "assistant",
+                "content": partial_solutions
+            }
+        ] 
+        while cnt:
+            try:
+                outputs = self.model.chat(conversations, sampling_params=self.sampling_params)
+                split_response = [outputs[0].outputs[i].text for i in range(n_responses)]
+                break
+            except Exception as e:
+                print(f'Error:{e}, obtain response again...\n')
+                cnt -= 1
+
+        return split_response
+
+    def test(self):
+
+        system_prompt = r"""Given a science problem and an existing incomplete solution, your task is to complete the solution in a smooth and proper way.
+
+            - If no existing steps are provided, you must briefly analyze the problem and output only the first step.  
+            - If existing steps are sufficent to solve the problem, you must output the final answer and format the answer inside `\\boxed{}` (e.g., `\\boxed{42}`). 
+            - If existing steps are not sufficent to solve the problem, you must output exactly **one** correct next step that naturally follows from the previous ones.  
+            - You **must** follow the given format.
+
+            **Strict Output Format:**  
+            - Your response must always start with: `Next step: ...`  
+            - The response must be limited to one reasoning step (e.g., a calculation, reasoning, or answer choice).  
+
+            If there are multiple reasonable next steps, choose the most natural one based on the provided existing steps. """
+        
+        query = r""" 
+            Here is the problem and the existing steps:  
+
+            Problem: How many positive whole-number divisors does 196 have?
+            Existing Steps:
+            Null
+
+            Output:"""
+        response = self.get_proposal(system_prompt,query, n_responses=1)
+        print(f'response: {response}')
     
 
 class QwenReward:

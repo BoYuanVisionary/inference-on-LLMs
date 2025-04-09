@@ -1,9 +1,9 @@
 
-from reasoning.models.model import Model
-from reasoning.VMCTS.task import VMCTS_Task
+from reasoning.MCTS.task import MCTS_Task
 from reasoning.tools.utils import seed_everything
 seed_everything(110)
-from reasoning.models.model import ValueModel_shepherd, ValueModel_qwen
+from reasoning.models.model import ValueModel_qwen
+from reasoning.models.model_vllm import QwenPolicy
 import argparse
 import datasets
 import wandb
@@ -11,12 +11,10 @@ import time
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--policy_model_device', type=str, default='cuda:0')
-    parser.add_argument('--reward_model_device', type=str, default='cuda:1')
     parser.add_argument('--seed', type=int, default=110)
     parser.add_argument('--iteration_limit', type=int, default=50)
     parser.add_argument('--end_gate', type=float, default=0.9)
-    parser.add_argument('--branch', type=int, default=2)
+    parser.add_argument('--branch', type=int, default=1)
     parser.add_argument('--roll_branch', type=int, default=1)
     parser.add_argument('--roll_forward_steps', type=int, default=2)
         
@@ -25,32 +23,25 @@ def get_args():
 args = get_args()
 
 
-wandb.init(project='efficient_reasoning', name='vmcts',config=args.__dict__)
-
-
+wandb.init(project='efficient_reasoning', name='mcts',config=args.__dict__)
 seed_everything(args.seed)
-policy_model = Model('meta-llama/Llama-3.2-3B-Instruct',device=args.policy_model_device)
-reward_model = ValueModel_qwen(args.reward_model_device) # using qwen as reward model
+policy_model = QwenPolicy('Qwen/Qwen2.5-7B-Instruct', gpu_memory_utilization=0.8)
+reward_model = ValueModel_qwen(device='auto') 
 
-# load math500 dataset
+# load math500 data set
 dataset = datasets.load_dataset("HuggingFaceH4/MATH-500")
 dataset = dataset['test']
 total_time = 0
 
-# if policy_model_device is cuda:0, then use the first 100 examples otherwise use the last 100 examples
-if args.policy_model_device in ['cuda:0', 'cuda:2']:
-    problems = dataset[:100]['problem']
-    solutions = dataset[:100]['solution']
-else:
-    problems = dataset[-100:]['problem']
-    solutions = dataset[-100:]['solution']
+problems = dataset['problem']
+solutions = dataset['solution']
 
 number_right_answers = 0
-for i in range(100):
+for i in range(len(problems)):
     question = problems[i]
     answer = solutions[i]
 
-    task = VMCTS_Task(question, answer = answer, propose_method=policy_model, value_method=reward_model,
+    task = MCTS_Task(question, answer = answer, propose_method=policy_model, value_method=reward_model,
                      iteration_limit=args.iteration_limit, end_gate=args.end_gate, branch=args.branch,
                      roll_branch=args.roll_branch, roll_forward_steps=args.roll_forward_steps)
     time_start = time.time()
