@@ -10,7 +10,7 @@ class Path(object):
         self.apicalls = 0
 
         self.steps = self.solutions_to_steps(solutions)
-
+        self.solutions = solutions
         self.scores = None
     
     # we can also consider combine some steps if their scores are close to each other
@@ -52,8 +52,12 @@ class Path(object):
             system_prompt = self.openrouter.set_system_prompt_for_step_decomposition()
             output = self.openrouter.completion(system_prompt, user_prompt)
             # print(output)
-            output_json = json.loads(output)
-            steps = list(output_json.values())
+            try:
+                output_json = json.loads(output)
+                steps = list(output_json.values())
+            except:
+                steps = [output]
+                warnings.warn("Failed to parse the output as a json. Using the output as a single step.")
             return steps
         
 

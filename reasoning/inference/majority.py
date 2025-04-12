@@ -14,14 +14,14 @@ import argparse
 # this contains both weighted and unweighted majority inference
 class MajorityInference:
     
-    def __init__(self, model, tokenizer, sampling_params, config_name, method = 'majority'):
+    def __init__(self, model, tokenizer, sampling_params, config_name, reward_model, method = 'majority'):
         self.model = model
         self.tokenizer = tokenizer
         self.sampling_params = sampling_params
         self.sample_size = 0
         self.right_count = 0
         self.num_generated_tokens = []
-        self.reward = None
+        self.reward_model = reward_model
         if method not in ['majority', 'weighted_majority', 'best_of_N']:
             raise ValueError('method must be either majority or weighted_majority')
         self.method = method
@@ -69,9 +69,10 @@ class MajorityInference:
         # print(texts)
         return texts, num_generated_tokens
     
-    def majority_vote(self, generated_text):
+    def majority_vote(self, generated_text, rewards=None):
         # extract the generated text for a single problem
         solutions = [extract_answer(text) for text in generated_text]
+        print(f'found solutions: {solutions}')
         if len(solutions) == 1:
             return solutions[0]
         # create a matrix to store if any two solutions are equal
@@ -82,15 +83,23 @@ class MajorityInference:
         majority_solution = solutions[max(range(len(equal_matrix)), key=lambda i: sum(equal_matrix[i]))]
         return majority_solution
     
-    def weighted_majority_vote(self, generated_text):
+    def weighted_majority_vote(self, generated_text, rewards):
         solutions = [extract_answer(text) for text in generated_text]
-        rewards = self.reward(solutions)
-        # to be implemented
-        raise NotImplementedError('weighted majority vote is not implemented')
+        print(f'found solutions: {solutions}')
+        if len(solutions) == 1:
+            return solutions[0]
+        # create a matrix to store if any two solutions are equal
+        equal_matrix = [[math_equal(solutions[i], solutions[j]) for j in range(i,len(solutions))] for i in range(len(solutions))]
+        # majority vote: choose the solution whose number of equal solutions is the largest  (sum of each row)
+        # if there are multiple solutions with the same number of equal solutions, choose the first one
+        # print(equal_matrix)
+        majority_solution = solutions[max(range(len(equal_matrix)), key=lambda i: sum(equal_matrix[i]))]
+        return majority_solution
+
     
-    def best_of_N(self, generated_text):
+    def best_of_N(self, generated_text, rewards):
         solutions = [extract_answer(text) for text in generated_text]
-        rewards = self.reward(solutions)
+        print(f'found solutions: {solutions}')
         # return the solution with the highest reward, if there are multiple solutions with the same reward, choose the first one
         best_solution = solutions[max(range(len(rewards)), key=lambda i: rewards[i])]
         return best_solution
@@ -104,7 +113,9 @@ class MajorityInference:
         self.num_generated_tokens.extend(num_generated_tokens)
         for i in range(len(questions)): # input batch implemented in the main function
             current_generated_solutions = generated_solutions[i*num_return_sequences:(i+1)*num_return_sequences]
-            selected_solution = inference_method(current_generated_solutions)
+            # TODO: add rewards
+            # rewards = self.reward_model.get_value_with_steps(questions[i], current_generated_solutions)
+            selected_solution = inference_method(current_generated_solutions, rewards=None)
             extracted_answer = extract_answer(answers[i])
             is_correct = math_equal(selected_solution, extracted_answer)
             if extracted_answer is None:
@@ -204,7 +215,7 @@ if __name__ == "__main__":
         include_stop_str_in_output = False,
     ) # shouldn't set seed for random sampling
 
-    inference = MajorityInference(model, tokenizer,sampling_params,config_name,method='majority')
+    inference = MajorityInference(model, tokenizer,sampling_params,config_name,reward_model=None,method='majority')
     # make a batch of samples
 
     start_time = time.time()

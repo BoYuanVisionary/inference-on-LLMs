@@ -6,7 +6,7 @@ class Openrouter:
     def __init__(self, model="openai/gpt-4o-2024-11-20"):
         self.client = OpenAI(
         base_url="https://openrouter.ai/api/v1",
-        api_key="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",
+        api_key="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",
         )
         self.model = model
 
@@ -32,6 +32,7 @@ class Openrouter:
         ],
         response_format={ "type": "json_object" }
         )
+        # print(completion)
         return completion.choices[0].message.content
     
     def set_system_prompt_for_step_decomposition(self):
@@ -115,7 +116,7 @@ if __name__ == "__main__":
     output = openrouter.completion(system_prompt, user_prompt)
     # load the output as a json object
     output_json = json.loads(output)
-    print(output_json)
+    # print(output_json)
 
     # this is the expected output
     # {
