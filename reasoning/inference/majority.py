@@ -1,5 +1,4 @@
 import os
-# set the environment variable for the GPUs to use before importing torc
 from reasoning.tools.utils import load_model_with_vllm
 from reasoning.evaluator.math_grader import math_equal, extract_answer
 from datasets import load_dataset
@@ -11,7 +10,9 @@ import numpy as np
 import json
 import argparse
 
-# this contains both weighted and unweighted majority inference
+# supported inference methods: majority_voting, greedy (majority_voting with 1 step)
+# to do: weighted majority voting, best of N
+
 class MajorityInference:
     
     def __init__(self, model, tokenizer, sampling_params, config_name, reward_model, method = 'majority'):
@@ -96,7 +97,6 @@ class MajorityInference:
         majority_solution = solutions[max(range(len(equal_matrix)), key=lambda i: sum(equal_matrix[i]))]
         return majority_solution
 
-    
     def best_of_N(self, generated_text, rewards):
         solutions = [extract_answer(text) for text in generated_text]
         print(f'found solutions: {solutions}')
@@ -122,13 +122,13 @@ class MajorityInference:
                 raise ValueError('extracted answer is None')
             if is_correct:
                 self.right_count += 1
-            mean_num_generated_tokens = np.mean(num_generated_tokens[i*num_return_sequences:(i+1)*num_return_sequences])
+            sum_num_generated_tokens = np.sum(num_generated_tokens[i*num_return_sequences:(i+1)*num_return_sequences])
             print("--------------------------------")
             print(f'question: {questions[i]}')
             print(f'majority solution: {selected_solution}')
             print(f'extracted answer: {extracted_answer}')
             print(f'is correct: {is_correct}')
-            print(f'mean_num_generated_tokens: {mean_num_generated_tokens}')
+            print(f'sum_num_generated_tokens: {sum_num_generated_tokens}')
             print("--------------------------------")
             self.save_solutions_to_jsonl(questions[i], current_generated_solutions, selected_solution, extracted_answer, is_correct, mean_num_generated_tokens)
         print(f'processed {self.sample_size} samples')
@@ -149,25 +149,6 @@ class MajorityInference:
             
             # Write as a single line of JSON
             f.write(json.dumps(result) + '\n')
-        
-        # # Log to wandb if it's initialized
-        # if wandb.run is not None:
-        #     # Create artifact
-        #     artifact = wandb.Artifact(
-        #         name=f"majority_solutions_{os.path.basename(self.results_file)}",
-        #         type="solutions",
-        #         description="Generated solutions from majority vote inference"
-        #     )
-            
-        #     # Add the file to the artifact
-        #     artifact.add_file(self.results_file)
-            
-        #     # Log the artifact
-        #     wandb.log_artifact(artifact)
-            
-        #     # Also log key statistics
-    
-    
 
 if __name__ == "__main__":
     
@@ -216,7 +197,6 @@ if __name__ == "__main__":
     ) # shouldn't set seed for random sampling
 
     inference = MajorityInference(model, tokenizer,sampling_params,config_name,reward_model=None,method='majority')
-    # make a batch of samples
 
     start_time = time.time()
     for i in range(0, len(dataset), batch_size):
@@ -227,9 +207,9 @@ if __name__ == "__main__":
     inference.reset()
     wandb.log({"accuracy": accuracy})
     end_time = time.time()
-    print(f"current majority inference batch size: {num_return_sequences}")
-    print(f"total mean num generated tokens: {np.mean(inference.num_generated_tokens)}")
-    wandb.log({"total_mean_num_generated_tokens": np.mean(inference.num_generated_tokens)})
+    print(f"parallel size: {num_return_sequences}")
+    print(f"generated tokens per sample in average: {np.mean(inference.num_generated_tokens) * num_return_sequences}")
+    wandb.log({"generated tokens per sample in average": np.mean(inference.num_generated_tokens) * num_return_sequences})
     print("Time taken: {} seconds".format(end_time - start_time))
 
     wandb.finish()
