@@ -108,7 +108,7 @@ class QwenPolicy:
         else:
             return self.get_local_response_llama_vllm_completion(system_prompt, query, partial_solutions, n_responses)
         
-    def get_local_response_llama_vllm(self, system_prompt, query, n_responses): # batch generation
+    def get_local_response_llama_vllm(self, system_prompt, query, n_responses):
         
         cnt = 2
         self.sampling_params.n = n_responses
@@ -133,7 +133,7 @@ class QwenPolicy:
 
         return split_response
     
-    def get_local_response_llama_vllm_completion(self, system_prompt, query, partial_solutions, n_responses): # batch generation
+    def get_local_response_llama_vllm_completion(self, system_prompt, query, partial_solutions, n_responses):
         
         cnt = 2
         self.sampling_params.n = n_responses
@@ -155,6 +155,38 @@ class QwenPolicy:
             try:
                 outputs = self.model.chat(conversations, sampling_params=self.sampling_params)
                 split_response = [outputs[0].outputs[i].text for i in range(n_responses)]
+                break
+            except Exception as e:
+                print(f'Error:{e}, obtain response again...\n')
+                cnt -= 1
+
+        return split_response
+    
+    def get_local_response_llama_vllm_completion_batch(self, system_prompt, queries, partial_solutions, n_responses): # batch generation
+    
+        cnt = 2
+        self.sampling_params.n = n_responses
+        conversations = [[
+            {
+                "role": "system",
+                "content": system_prompt
+            },
+            {
+                "role": "user",
+                "content": query
+            },
+            {
+                "role": "assistant",
+                "content": partial_solution
+            } 
+        ] for query, partial_solution in zip(queries, partial_solutions)]
+        while cnt:
+            try:
+                split_response = []
+                generation = self.model.chat(conversations, sampling_params=self.sampling_params)
+                for output in generation:
+                    for output_text in output.outputs:
+                        split_response.append(output_text.text)
                 break
             except Exception as e:
                 print(f'Error:{e}, obtain response again...\n')

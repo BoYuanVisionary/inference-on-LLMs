@@ -10,17 +10,17 @@ from reasoning.inference.majority import MajorityInference
 from reasoning.tools.logger import load_config, apply_config
 import numpy as np
 import argparse
-from reasoning.samplingTree.tree import Tree
+from reasoning.inference.tree import Tree
 from reasoning.inference.majority import MajorityInference
 from reasoning.evaluator.math_grader import math_equal, extract_answer
 
-from reasoning.models.model_vllm import QwenPolicy
 from reasoning.models.model import ValueModel_qwen
 
 
 # Does not support batch inference
 
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="../../configs/development.yaml")
     args = parser.parse_args()
@@ -33,24 +33,24 @@ if __name__ == "__main__":
     dataset = dataset['test']
     model_name = config["model_name"]
 
-    value_model = ValueModel_qwen(device = "auto")
-    policy_model = QwenPolicy(model_name, gpu_memory_utilization=0.8, max_new_tokens=2048)
-    tokenizer = policy_model.tokenizer
-    tokenizer.pad_token = tokenizer.eos_token    
+    policy_model, tokenizer = load_model_with_vllm(model_name, task='auto', tensor_parallel_size=len(config["cuda_device_ids"]), gpu_memory_utilization=0.8)
+    tokenizer.pad_token = tokenizer.eos_token 
+    reward_model = config.get("reward_model", None)
+    reward_model = ValueModel_qwen(device = "auto")
 
     # inference hyperparameters
     num_return_sequences = config["num_return_sequences"]
+    assert num_return_sequences == 1
     max_new_tokens = config["max_new_tokens"]
     temperature = config["temperature"]
     top_p = config["top_p"]
-    batch_size = config["batch_size"]
-    num_return_sequences = config["num_return_sequences"]
     system_prompt = config["system_prompt"]
 
     # SamplingTree parameters
     sampling_method = config["sampling_method"]
     samplingTree_temperature = config["samplingTree_temperature"]
-    threshold = config["threshold"]
+    beam_width = config["beam_width"]
+    max_steps = config["max_steps"]
 
     # name of the results file
     config_name = config["config_name"]
@@ -68,32 +68,40 @@ if __name__ == "__main__":
 
     start_time = time.time()
     right_count = 0
+    num_generated_tokens = 0
     for i in range(0, len(dataset)):
         question = dataset['problem'][i]
         answer = dataset['solution'][i]        
 
-        tree = Tree(system_prompt, question, policy_model, value_model, sampling_method='node')
-        tree.set_proposal_params_node(temperature=samplingTree_temperature)
-        for i in range(num_return_sequences):
+        tree = Tree(system_prompt, question, policy_model, reward_model, sampling_method, config_name, sampling_params, samplingTree_temperature, beam_width)
+        for _ in range(max_steps):
             path = tree.generate_next_trajectory() 
-        majority_inference = MajorityInference(model=None, tokenizer=None, sampling_params=None, config_name=None, method = 'majority')
-        all_solutions  = [path.solutions for path in tree.paths]
-        majority_solution = majority_inference.majority_vote(all_solutions)   
+            tree.paths.append(path)
+            print(len(tree.paths))
+        majority_inference = MajorityInference(policy_model=policy_model, tokenizer=tokenizer, sampling_params=sampling_params, config_name=config_name, reward_model=reward_model, method = 'weighted_majority')
+        all_solutions  = [path.solutions for path in tree.explored_paths]
+        rewards = [np.min(path.scores) for path in tree.explored_paths]
+        
+        solution = majority_inference.weighted_majority_vote(all_solutions, rewards)   
         extracted_answer = extract_answer(answer)
-        is_correct = math_equal(extracted_answer, majority_solution)
+        is_correct = math_equal(extracted_answer, solution)
         if extracted_answer is None:
             raise ValueError('extracted answer is None')
         if is_correct:
             right_count += 1
+        num_generated_tokens += tree.num_generated_tokens
         print("--------------------------------")
         print(f'question: {question}')
-        print(f'majority solution: {majority_solution}')
+        print(f'solution: {solution}')
         print(f'extracted answer: {extracted_answer}')
         print(f'is correct: {is_correct}')
+        print(f'Accuracy: {right_count/(i+1)}')
+        print(f'Number of generated tokens: {tree.num_generated_tokens}')
         print("--------------------------------")
 
-    
-    wandb.log({"accuracy": right_count/len(dataset)})
+
+    wandb.log({"Accuracy": right_count/len(dataset)})
+    wandb.log({"Number of generated tokens": num_generated_tokens/len(dataset)})
     end_time = time.time()
     print("Time taken: {} seconds".format(end_time - start_time))
 

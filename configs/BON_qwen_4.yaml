@@ -1,8 +1,8 @@
-config_name: Qwen2.5-7B-Instruct-majority_16
+config_name: Qwen2.5-7B-Instruct-BON-4
 
 # System parameters
 batch_size: 10
-cuda_device_ids: [2, 3]
+cuda_device_ids: [0, 1, 2, 3]
 seed: 42
 
 # Dataset and model parameters
@@ -12,18 +12,18 @@ model_name: Qwen/Qwen2.5-7B-Instruct
 # and we have to enforce it to generate the correct format
  
 system_prompt: |
-  Solve the folloiwng math problem and you must strictly follow the instructions below:
-  1. Reason step by step
-  2. You must put your final answer within \boxed{} in the end
+  Solve the following reasoning problem, strictly following the instructions below:
+  1. Show your reasoning step by step.
+  2. Put your final answer within \boxed{} at the end
 # Inference parameters
 max_new_tokens: 2048
 temperature: 0.7
 top_p: 0.9
 
-# majority parameters
-experiment_name: majority_experiment
-inference_method: majority
-num_return_sequences: 16
+# BON parameters
+experiment_name: BON_experiment
+inference_method: best_of_N
+num_return_sequences: 4
 
 # wandb parameters
 wandb_project: efficient_reasoning
