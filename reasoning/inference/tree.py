@@ -11,6 +11,7 @@ class Path(object):
     def __init__(self, solutions):
         self.openrouter = Openrouter()
         self.apicalls = 0
+        self.error_steps_count = 0
         
         self.steps = self.solutions_to_steps(solutions)
         if len(self.steps) == 0:
@@ -43,7 +44,10 @@ class Path(object):
             for _, step_content in matches:
                 if step_content:
                     steps.append(step_content.strip())
-            return steps
+            if len(steps) > 0:
+                return steps
+            else:
+                steps = []
             
         # If no numbered steps found, try the "Step X:" or "step X:" format
         step_pattern = re.compile(r'(?:^|\n)\s*#{1,6}\s+(?:S|s)tep\s+\d+:\s*(.*?)(?=(?:\n\s*#{1,6}\s+(?:S|s)tep\s+\d+:)|$)', re.DOTALL)
@@ -53,23 +57,37 @@ class Path(object):
                 step_content = match.group(1).strip()
                 if step_content:
                     steps.append(step_content)
+            if len(steps) > 0:
+                return steps
+            else:
+                steps = []
+            
+
+        # Otherwise, decompose based on the '\n' or '\n\n'
+        if '\n\n' in solution_text:
+            steps = [step.strip() for step in solution_text.split('\n\n') if step.strip()]
+        else:
+            steps = [step.strip() for step in solution_text.split('\n') if step.strip()]
+            
+        if len(steps) > 0:
             return steps
-        else:# if no steps found, use gpt to decompose the solutions
-            warnings.warn("No explicit steps found in the solutions. Using gpt instead")
-            self.apicalls += 1
-            user_prompt = solutions 
+
         
-            system_prompt = self.openrouter.set_system_prompt_for_step_decomposition()
-            output = self.openrouter.completion(system_prompt, user_prompt)
-            # print(output)
-            try:
-                output_json = json.loads(output)
-                steps = list(output_json.values())
-            except:
-                steps = [output]
-                warnings.warn("Failed to parse the output as a json. Using the output as a single step.")
-            return steps
+        warnings.warn("No explicit steps found in the solutions. Using gpt instead")
+        self.apicalls += 1
+        user_prompt = solutions 
     
+        system_prompt = self.openrouter.set_system_prompt_for_step_decomposition()
+        output = self.openrouter.completion(system_prompt, user_prompt)
+        # print(output)
+        try:
+            output_json = json.loads(output)
+            steps = list(output_json.values())
+        except:
+            steps = [output]
+            warnings.warn("Failed to parse the output as a json. Using the output as a single step.")
+        return steps
+
 
 class Tree(BaseInference):
     def __init__(self, system_prompt, question, policy_model, reward_model, sampling_method, config_name, sampling_params, sampling_temperature, beam_width):
@@ -157,6 +175,50 @@ class Tree(BaseInference):
             else:
                 return path
     
+    def sampling_stochastic_beam_search(self, path):
+        if path is None:
+            solutions, num_generated_tokens, num_input_tokens = self.generate_text(self.system_prompt, [self.question])
+            self.num_generated_tokens += sum(num_generated_tokens)
+            new_path = Path(solutions[-1])
+            # In principle, we should add the new path to the explored paths
+            # But for a fair comparison with the other methods, we do not add it to the explored paths
+            # self.explored_paths.append(new_path) 
+            new_path.scores = self.reward_model.get_value_with_steps(self.question, new_path.steps)
+            return new_path
+        else:
+            scores = np.array(path.scores)
+            # resample based on the scores of all steps
+            temperature = self.sampling_temperature
+            beam_width = len(scores) if self.beam_width is None else self.beam_width
+            normalized_scores = np.exp(-scores/temperature) / sum(np.exp(-scores/temperature))
+            # randomly sample beam_width steps based on the normalized scores
+            next_steps = np.random.choice(range(len(normalized_scores)), size=beam_width, p=normalized_scores)
+            # for each chosen step, sample a new solution from the policy model
+            new_solutions = []
+            target_score = np.min(path.scores)
+            best_path = path
+
+            partial_solutions = [' '.join(path.steps[:step]) for step in next_steps]
+            # print(f'partial_solutions: {partial_solutions}')
+
+            questions = [self.question] * len(next_steps)
+            new_solutions, num_generated_tokens, num_input_tokens = self.generate_text_completion(self.system_prompt, questions, partial_solutions)   
+            # print(f'new_solutions: {new_solutions}')
+            self.num_generated_tokens += sum(num_generated_tokens)
+
+            for i in range(len(next_steps)): # works only when the last parameter of get_local_response_llama_vllm_completion_batch is 1
+                new_path = Path(partial_solutions[i] + '\n' + new_solutions[i])
+                self.explored_paths.append(new_path)
+                new_scores = self.reward_model.get_value_with_steps(self.question, new_path.steps)
+                new_path.scores = new_scores
+                # for score, step in zip(new_scores, new_path.steps):
+                #     print(f'score: {score}, step: {step}')
+                if np.min(new_scores) > target_score:
+                    target_score = np.min(new_scores)
+                    best_path = new_path
+            print(f'best_path: {best_path.steps}')
+            return best_path
+        
     def sampling_stochastic_beam_search(self, path):
         if path is None:
             solutions, num_generated_tokens, num_input_tokens = self.generate_text(self.system_prompt, [self.question])

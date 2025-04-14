@@ -69,7 +69,8 @@ if __name__ == "__main__":
     start_time = time.time()
     right_count = 0
     num_generated_tokens = 0
-    for i in range(0, len(dataset)):
+    error_steps_count_all = 0
+    for i in range(0, 100):
         question = dataset['problem'][i]
         answer = dataset['solution'][i]        
 
@@ -96,7 +97,15 @@ if __name__ == "__main__":
         print(f'extracted answer: {extracted_answer}')
         print(f'is correct: {is_correct}')
         print(f'Accuracy: {right_count/(i+1)}')
+        wandb.log({"Accuracy": right_count/(i+1)})
         print(f'Number of generated tokens: {tree.num_generated_tokens}')
+        # print out the error steps count
+        error_steps_count = 0
+        for path in tree.explored_paths:
+            if len(path.steps) <= 1:
+                error_steps_count += 1
+        error_steps_count_all += error_steps_count
+        print(f'Error steps count: {error_steps_count_all}')
         print("--------------------------------")
 
 
