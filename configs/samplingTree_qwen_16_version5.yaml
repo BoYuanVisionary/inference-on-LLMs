@@ -1,4 +1,4 @@
-config_name: Llama-3.2-3B-Instruct-samplingTree_16_version5
+config_name: Qwen2.5-7B-Instruct-samplingTree_16_version5
 
 # System parameters
 batch_size: 1
@@ -7,7 +7,7 @@ seed: 42
 
 # Dataset and model parameters
 data_path: HuggingFaceH4/MATH-500
-model_name: meta-llama/Llama-3.2-3B-Instruct
+model_name: Qwen/Qwen2.5-7B-Instruct
 # The folllowing is the default system prompt for llama-3.1-8b-instruct since its weak intrction following ability 
 # and we have to enforce it to generate the correct format
  

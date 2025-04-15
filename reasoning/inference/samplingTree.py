@@ -51,7 +51,7 @@ if __name__ == "__main__":
     samplingTree_temperature = config["samplingTree_temperature"]
     beam_width = config["beam_width"]
     max_steps = config["max_steps"]
-
+    threshold = config["threshold"]
     # name of the results file
     config_name = config["config_name"]
 
@@ -70,11 +70,11 @@ if __name__ == "__main__":
     right_count = 0
     num_generated_tokens = 0
     error_steps_count_all = 0
-    for i in range(0, 100):
+    for i in range(0, len(dataset)):
         question = dataset['problem'][i]
         answer = dataset['solution'][i]        
 
-        tree = Tree(system_prompt, question, policy_model, reward_model, sampling_method, config_name, sampling_params, samplingTree_temperature, beam_width)
+        tree = Tree(system_prompt, question, policy_model, reward_model, sampling_method, config_name, sampling_params, samplingTree_temperature, beam_width, threshold)
         for _ in range(max_steps):
             path = tree.generate_next_trajectory() 
             tree.paths.append(path)
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         print(f'extracted answer: {extracted_answer}')
         print(f'is correct: {is_correct}')
         print(f'Accuracy: {right_count/(i+1)}')
-        wandb.log({"Accuracy": right_count/(i+1)})
+        wandb.log({"Accuracy": right_count/(i+1)}, step=i)
         print(f'Number of generated tokens: {tree.num_generated_tokens}')
         # print out the error steps count
         error_steps_count = 0
@@ -106,6 +106,7 @@ if __name__ == "__main__":
                 error_steps_count += 1
         error_steps_count_all += error_steps_count
         print(f'Error steps count: {error_steps_count_all}')
+        wandb.log({"Error steps count": error_steps_count_all}, step=i)
         print("--------------------------------")
 
 
