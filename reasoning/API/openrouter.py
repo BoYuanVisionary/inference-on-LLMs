@@ -6,7 +6,7 @@ class Openrouter:
     def __init__(self, model="openai/gpt-4o-2024-11-20"):
         self.client = OpenAI(
         base_url="https://openrouter.ai/api/v1",
-        api_key="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",
+        api_key="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",
         )
         self.model = model
 

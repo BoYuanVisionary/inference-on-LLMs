@@ -165,7 +165,7 @@ if __name__ == "__main__":
     ) # shouldn't set seed for random sampling
 
     inference = MajorityInference(model, tokenizer,sampling_params,config_name,reward_model,method=config["inference_method"])
-
+    # dataset = dataset.shuffle(seed=42).select(range(100))
     start_time = time.time()
     for i in range(0, len(dataset), batch_size):
         questions = dataset['problem'][i:i+batch_size]

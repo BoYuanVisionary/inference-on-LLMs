@@ -4,6 +4,7 @@ import warnings
 import json
 from reasoning.API.openrouter import Openrouter
 from reasoning.inference.base import BaseInference
+from reasoning.evaluator.math_grader import math_equal, extract_answer
 
 #existing issue: error handling for api calls
 # need to include text before step 1
@@ -16,6 +17,10 @@ class Path(object):
         self.steps = self.solutions_to_steps(solutions)
         if len(self.steps) == 0:
             self.steps = [solutions]
+            print('problematic solutions:')
+            print(f'solutions: {solutions}')
+            print(f'steps: {self.steps}')
+
         # print(f'solutions: {solutions}')
         # print(f'steps: {self.steps}')
         # print('-'*100)
@@ -23,6 +28,7 @@ class Path(object):
         self.solutions = solutions
         self.scores = None
     
+
     # we can also consider combine some steps if their scores are close to each other
 
     def solutions_to_steps(self, solutions):
@@ -103,7 +109,7 @@ class Tree(BaseInference):
         self.explored_paths = [] 
         self.paths = [] 
 
-        if sampling_method not in ['node', 'MH', 'stochastic_beam_search', 'stochastic_beam_search_version2', 'stochastic_beam_search_version3']:
+        if sampling_method not in ['node', 'MH', 'stochastic_beam_search', 'stochastic_beam_search_version2', 'stochastic_beam_search_version3', 'stochastic_beam_search_version4']:
             raise ValueError("Invalid sampling method")
         self.sampling_method = sampling_method
 
@@ -125,6 +131,10 @@ class Tree(BaseInference):
             new_path = self.sampling_stochastic_beam_search(current_path)
         elif self.sampling_method == 'stochastic_beam_search_version2':
             new_path = self.sampling_stochastic_beam_search_version2(current_path)
+        elif self.sampling_method == 'stochastic_beam_search_version3':
+            new_path = self.sampling_stochastic_beam_search_version3(current_path)
+        elif self.sampling_method == 'stochastic_beam_search_version4':
+            new_path = self.sampling_stochastic_beam_search_version4(current_path)
         elif self.sampling_method == 'MH':
             new_path = self.sampling_MH(current_path)
 
@@ -178,7 +188,7 @@ class Tree(BaseInference):
             else:
                 return path
     
-    def sampling_stochastic_beam_search(self, path):
+    def sampling_stochastic_beam_search(self, path): 
         if path is None:
             solutions, num_generated_tokens, num_input_tokens = self.generate_text(self.system_prompt, [self.question])
             self.num_generated_tokens += sum(num_generated_tokens)
@@ -201,8 +211,13 @@ class Tree(BaseInference):
             target_score = np.min(path.scores)
             best_path = path
 
-            partial_solutions = [' '.join(path.steps[:step]) for step in next_steps]
-            # print(f'partial_solutions: {partial_solutions}')
+            partial_solutions = []
+            for step_idx in next_steps:
+                formatted_steps = []
+                for i, step_content in enumerate(path.steps[:step_idx]):
+                    formatted_steps.append(f"## Step {i+1}: {step_content}")
+                partial_solutions.append('\n\n'.join(formatted_steps))
+          
 
             questions = [self.question] * len(next_steps)
             new_solutions, num_generated_tokens, num_input_tokens = self.generate_text_completion(self.system_prompt, questions, partial_solutions)   
@@ -223,6 +238,7 @@ class Tree(BaseInference):
             return best_path
         
     def sampling_stochastic_beam_search_version2(self, path): # added a filtering mechanism to the original stochastic beam search
+        
         if path is None:
             solutions, num_generated_tokens, num_input_tokens = self.generate_text(self.system_prompt, [self.question])
             self.num_generated_tokens += sum(num_generated_tokens)
@@ -253,8 +269,15 @@ class Tree(BaseInference):
             target_score = np.min(path.scores)
             best_path = path
 
-            partial_solutions = [' '.join(path.steps[:step]) for step in next_steps]
+            # partial_solutions = [' '.join(path.steps[:step]) for step in next_steps]
             # print(f'partial_solutions: {partial_solutions}')
+
+            partial_solutions = []
+            for step_idx in next_steps:
+                formatted_steps = []
+                for i, step_content in enumerate(path.steps[:step_idx]):
+                    formatted_steps.append(f"## Step {i+1}: {step_content}")
+                partial_solutions.append('\n\n'.join(formatted_steps))
 
             questions = [self.question] * len(next_steps)
             new_solutions, num_generated_tokens, num_input_tokens = self.generate_text_completion(self.system_prompt, questions, partial_solutions)   
@@ -288,7 +311,7 @@ class Tree(BaseInference):
             scores = np.array(path.scores)
             # resample based on the scores of all steps
             temperature = self.sampling_temperature
-            beam_width = len(scores) if self.beam_width is None else self.beam_width
+            beam_width = len(scores) if self.beam_width is None else self.beam_width # consider how to make it adaptive
 
             augmented_scores = np.concatenate(([1.0], scores))
             score_diffs = np.diff(augmented_scores)
@@ -302,45 +325,119 @@ class Tree(BaseInference):
             
             else:                
                 decrease_magnitudes = -score_diffs[decreasing_indices]
-                normalized_magnitudes = decrease_magnitudes / np.sum(decrease_magnitudes)
+                normalized_magnitudes = decrease_magnitudes/temperature / sum(decrease_magnitudes/temperature) # exp is not a good choice
                 
-                # Sample beam_width indices from the decreasing indices
-                beam_width = min(len(decreasing_indices), self.beam_width if self.beam_width is not None else len(decreasing_indices))
-                sampled_indices = np.random.choice(len(decreasing_indices), size=beam_width, p=normalized_magnitudes, replace=beam_width > len(decreasing_indices))
+                sampled_indices = np.random.choice(len(decreasing_indices), size=beam_width, p=normalized_magnitudes)
                 
                 # Get the actual step indices (add 1 because decreasing_indices refers to the augmented array)
                 next_steps = decreasing_indices[sampled_indices]
-            
-            
-            normalized_scores = np.exp(-scores/temperature) / sum(np.exp(-scores/temperature))
-            # randomly sample beam_width steps based on the normalized scores
-            next_steps = np.random.choice(range(len(normalized_scores)), size=beam_width, p=normalized_scores)
+                new_solutions = []
+                target_score = np.min(path.scores)
+                best_path = path
+                # If next_step is 0, the first step in the orignal path already has a drop in score
+                # So just remove all existing steps and start from the beginning
+                # partial_solutions = [' '.join(path.steps[:step]) for step in next_steps]
+                # print(f'partial_solutions: {partial_solutions}')
+                partial_solutions = []
+                for step_idx in next_steps:
+                    formatted_steps = []
+                    for i, step_content in enumerate(path.steps[:step_idx]):
+                        formatted_steps.append(f"## Step {i+1}: {step_content}")
+                    partial_solutions.append('\n\n'.join(formatted_steps))
+
+                questions = [self.question] * len(next_steps)
+                new_solutions, num_generated_tokens, num_input_tokens = self.generate_text_completion(self.system_prompt, questions, partial_solutions)   
+                # print(f'new_solutions: {new_solutions}')
+                self.num_generated_tokens += sum(num_generated_tokens)
+
+                for i in range(len(next_steps)): # works only when the last parameter of get_local_response_llama_vllm_completion_batch is 1
+                    new_path = Path(partial_solutions[i] + '\n\n' + new_solutions[i]) # needed if new_solution is also part of the partial solution
+                    self.explored_paths.append(new_path)
+                    new_scores = self.reward_model.get_value_with_steps(self.question, new_path.steps)
+                    new_path.scores = new_scores
+                    # for score, step in zip(new_scores, new_path.steps):
+                    #     print(f'score: {score}, step: {step}')
+                    if np.min(new_scores) > target_score:
+                        target_score = np.min(new_scores)
+                        best_path = new_path
+                print(f'best_path: {best_path.steps}')
+                print(f'best_path.scores: {best_path.scores}')
+                print(f'best_path.scores.min: {np.min(best_path.scores)}')
+                return best_path
+
+
+    def sampling_stochastic_beam_search_version4(self, path):
+        # find the first index where the score is smaller than the threshold (default is 0.9). And just do sampling on it. 
+        # using weighted BON at each step
+        if path is None:
+            solutions, num_generated_tokens, num_input_tokens = self.generate_text(self.system_prompt, [self.question])
+            self.num_generated_tokens += sum(num_generated_tokens)
+            new_path = Path(solutions[-1])
+            # In principle, we should add the new path to the explored paths
+            # But for a fair comparison with the other methods, we do not add it to the explored paths
+            # self.explored_paths.append(new_path) 
+            new_path.scores = self.reward_model.get_value_with_steps(self.question, new_path.steps)
+            return new_path
+        else:
+            scores = np.array(path.scores)
+            # resample based on the scores of all steps
+            beam_width = len(scores) if self.beam_width is None else self.beam_width
+            first_score_index = np.where(scores < self.threshold)[0][0] if np.any(scores < self.threshold) else -1
+            if first_score_index == -1: # if all scores are larger than the threshold, just return the original path
+                for _ in range(beam_width):
+                    self.explored_paths.append(path)
+                return path
+    
+            next_steps = [first_score_index] * beam_width
             # for each chosen step, sample a new solution from the policy model
             new_solutions = []
-            target_score = np.min(path.scores)
+            target_score = np.min(path.scores) # or maybe the score of current node
             best_path = path
 
-            partial_solutions = [' '.join(path.steps[:step]) for step in next_steps]
-            # print(f'partial_solutions: {partial_solutions}')
-
+            partial_solutions = []
+            for step_idx in next_steps:
+                formatted_steps = []
+                for i, step_content in enumerate(path.steps[:step_idx]):
+                    formatted_steps.append(f"## Step {i+1}: {step_content}")
+                partial_solutions.append('\n\n'.join(formatted_steps))
+          
+            # consider adding new step based on the previous feedback
             questions = [self.question] * len(next_steps)
             new_solutions, num_generated_tokens, num_input_tokens = self.generate_text_completion(self.system_prompt, questions, partial_solutions)   
             # print(f'new_solutions: {new_solutions}')
             self.num_generated_tokens += sum(num_generated_tokens)
-
+            all_scores = []
+            extracted_answers = []
+            new_paths = []
+            assert len(next_steps) > 1
             for i in range(len(next_steps)): # works only when the last parameter of get_local_response_llama_vllm_completion_batch is 1
-                new_path = Path(partial_solutions[i] + '\n' + new_solutions[i])
+                
+                new_path = Path(partial_solutions[i] + '\n\n' + new_solutions[i])
+
+                if len(partial_solutions[i]) > 5: # to ensure the partial solution is not too short like '' or '.' or '\n'
+                    temp_path1 = Path(partial_solutions[i])
+                    temp_path2 = Path(new_solutions[i])
+                    new_path.steps = temp_path1.steps + temp_path2.steps # may still have some thing at the beginning missing.
+                new_paths.append(new_path)
+
                 self.explored_paths.append(new_path)
                 new_scores = self.reward_model.get_value_with_steps(self.question, new_path.steps)
                 new_path.scores = new_scores
-                # for score, step in zip(new_scores, new_path.steps):
-                #     print(f'score: {score}, step: {step}')
-                if np.min(new_scores) > target_score:
-                    target_score = np.min(new_scores)
-                    best_path = new_path
-            print(f'best_path: {best_path.steps}')
-            return best_path
+                all_scores.append(np.min(new_scores))
+                extracted_answers.append(extract_answer(new_path.solutions))
+                
+            # self consistency mechanism
+            weighted_votes = [0.0] * len(next_steps)
             
+            for i in range(len(extracted_answers)):
+                for j in range(len(extracted_answers)):
+                    if math_equal(extracted_answers[i], extracted_answers[j]):
+                        weighted_votes[i] += all_scores[j]
+            
+            selected_path = new_paths[max(range(len(weighted_votes)), key=lambda i: weighted_votes[i])]
+            return selected_path
+
+
 
 if __name__ == "__main__":
 

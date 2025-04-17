@@ -70,6 +70,9 @@ if __name__ == "__main__":
     right_count = 0
     num_generated_tokens = 0
     error_steps_count_all = 0
+    # randomly sample a subset from the dataset
+    # dataset = dataset.shuffle(seed=42).select(range(100))
+    print(f'length of the dataset: {len(dataset)}')
     for i in range(0, len(dataset)):
         question = dataset['problem'][i]
         answer = dataset['solution'][i]        
