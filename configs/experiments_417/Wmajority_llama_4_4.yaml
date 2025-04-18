@@ -1,0 +1,30 @@
+config_name: Llama-3.2-1B-Instruct-Wmajority-4_4
+
+# System parameters
+batch_size: 10
+cuda_device_ids: [0, 1, 2, 3]
+seed: 4
+
+# Dataset and model parameters
+data_path: HuggingFaceH4/MATH-500
+model_name: meta-llama/Llama-3.2-1B-Instruct
+# The folllowing is the default system prompt for llama-3.1-8b-instruct since its weak intrction following ability 
+# and we have to enforce it to generate the correct format
+ 
+system_prompt: |
+  Solve the following reasoning problem, strictly following the instructions below:
+  1. Show your reasoning step by step. Each step should start with "## Step X:"
+  2. Put your final answer within \boxed{} at the end
+# Inference parameters
+max_new_tokens: 2048
+temperature: 0.7
+top_p: 0.9
+
+# weighted majority parameters
+experiment_name: weighted_majority_experiment
+inference_method: weighted_majority
+num_return_sequences: 4
+
+# wandb parameters
+wandb_project: efficient_reasoning
+

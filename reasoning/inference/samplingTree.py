@@ -64,6 +64,7 @@ if __name__ == "__main__":
         stop_token_ids=[tokenizer.eos_token_id],
         skip_special_tokens = True,
         include_stop_str_in_output = False,
+        seed  = config["seed"]
     ) # shouldn't set seed for random sampling
 
     start_time = time.time()
