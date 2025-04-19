@@ -14,8 +14,8 @@ from reasoning.models.model import ValueModel_qwen
 
 class MajorityInference(BaseInference):
     
-    def __init__(self, policy_model, tokenizer, sampling_params, config_name, reward_model, method):
-        super().__init__(policy_model, tokenizer, sampling_params, config_name, reward_model, method)
+    def __init__(self, policy_model, tokenizer, sampling_params, config_name, reward_model, method, ORM_type):
+        super().__init__(policy_model, tokenizer, sampling_params, config_name, reward_model, method, ORM_type)
         
         if method not in self.method_dict.keys() or method == 'beam_search':
             raise ValueError("Inference method not supported yet.")
@@ -33,22 +33,27 @@ class MajorityInference(BaseInference):
 
         # Get rewards for each solution. The fault reward for PRM is the minimum reward for each step
         rewards = []
+        all_step_rewards = []  # Store step rewards for each solution
         if self.method in ['weighted_majority', 'best_of_N']:
             for i in range(len(questions)):
                 current_generated_solutions = generated_solutions[i*num_return_sequences:(i+1)*num_return_sequences]
                 for solution in current_generated_solutions:
-                    reward_value = min(self.reward_model.get_value_with_steps(questions[i], Path(solution).steps))
+                    step_rewards = self.reward_model.get_value_with_steps(questions[i], Path(solution).steps)
+                    reward_value = self.get_reward(step_rewards) # get the scalar reward using ORM_type
                     # If the solution is not a valid solution, set the reward to 0. 
                     # To be more precise, run ablation to see if this is necessary
-                    if extract_answer(solution) is None: 
+                    if extract_answer(solution) is None:
                         reward_value = 0
                     rewards.append(reward_value)
+                    all_step_rewards.append(step_rewards)
         else: # no need to run reward model for majority voting
             rewards = None
+            all_step_rewards = None
 
         for i in range(len(questions)):
             current_generated_solutions = generated_solutions[i*num_return_sequences:(i+1)*num_return_sequences]
             current_rewards = rewards[i*num_return_sequences:(i+1)*num_return_sequences] if rewards is not None else None
+            current_step_rewards = all_step_rewards[i*num_return_sequences:(i+1)*num_return_sequences] if all_step_rewards is not None else None
             selected_solution = inference_method(current_generated_solutions, current_rewards)
             extracted_answer = extract_answer(answers[i])
             is_correct = math_equal(selected_solution, extracted_answer)
@@ -63,6 +68,7 @@ class MajorityInference(BaseInference):
             print(f'is correct: {is_correct}')
             print(f'sum_num_generated_tokens: {sum_num_generated_tokens}')
             print(f'current rewards: {current_rewards}')
+            print(f'current step rewards: {current_step_rewards}')
             print("--------------------------------")
 
             save_data = {
@@ -72,6 +78,7 @@ class MajorityInference(BaseInference):
                 "extracted_answer": extracted_answer,
                 "is_correct": is_correct,
                 "rewards": current_rewards,
+                "step_rewards": current_step_rewards
             }
             self.save_solutions_to_jsonl(save_data)
         print(f'processed {self.sample_size} samples')
@@ -85,7 +92,7 @@ class MajorityInference(BaseInference):
         if len(solutions) == 1:
             return solutions[0]
         # create a matrix to store if any two solutions are equal
-        equal_matrix = [[math_equal(solutions[i], solutions[j]) for j in range(i,len(solutions))] for i in range(len(solutions))]
+        equal_matrix = [[math_equal(solutions[i], solutions[j]) for j in range(len(solutions))] for i in range(len(solutions))]
         # majority vote: choose the solution whose number of equal solutions is the largest  (sum of each row)
         # if there are multiple solutions with the same number of equal solutions, choose the first one
         # print(equal_matrix)
@@ -138,8 +145,7 @@ if __name__ == "__main__":
     # need to set gpu_memory_utilization to 0.8 to avoid OOM when using qwen2.5b with 16
     model, tokenizer = load_model_with_vllm(model_name, task='auto', tensor_parallel_size=len(config["cuda_device_ids"]), gpu_memory_utilization=0.8)
     tokenizer.pad_token = tokenizer.eos_token 
-    reward_model = config.get("reward_model", None)
-    reward_model = ValueModel_qwen(device = "auto")
+    reward_model = ValueModel_qwen(device = "auto") # Qwen/Qwen2.5-Math-PRM-7B
 
     # inference hyperparameters
     num_return_sequences = config["num_return_sequences"]
@@ -163,9 +169,10 @@ if __name__ == "__main__":
         skip_special_tokens = True,
         include_stop_str_in_output = False,
         seed  = config["seed"]
-    ) # shouldn't set seed for random sampling
+    )
 
-    inference = MajorityInference(model, tokenizer,sampling_params,config_name,reward_model,method=config["inference_method"])
+    inference = MajorityInference(model, tokenizer,sampling_params,
+                                  config_name,reward_model,method=config["inference_method"],ORM_type=config["ORM_type"])
     # dataset = dataset.shuffle(seed=42).select(range(100))
     start_time = time.time()
     for i in range(0, len(dataset), batch_size):
@@ -173,11 +180,10 @@ if __name__ == "__main__":
         answers = dataset['solution'][i:i+batch_size]            
         accuracy = inference.inference(system_prompt, questions, answers)
         print("Accuracy: {}".format(accuracy))
+        wandb.log({"accuracy": accuracy},step = (i+batch_size))
         # inference.reset()
-    wandb.log({"accuracy": accuracy})
     end_time = time.time()
-    print(f"parallel size: {num_return_sequences}")
-    print(f"generated tokens per sample in average: {np.mean(inference.num_generated_tokens) * num_return_sequences}")
+    # print(f"generated tokens per sample in average: {np.mean(inference.num_generated_tokens) * num_return_sequences}")
     wandb.log({"generated tokens per sample in average": np.mean(inference.num_generated_tokens) * num_return_sequences})
     print("Time taken: {} seconds".format(end_time - start_time))
 

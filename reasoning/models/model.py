@@ -298,7 +298,7 @@ class ValueModel_qwen:
             
         return formatted_steps
                 
-    def get_value(self, query, output): # used in the code of MCTS
+    def get_value(self, query, output): # not used in SamplingTree
         try:
             formatted_steps = self.format_steps(output)
             input_ids, token_masks = self.prepare_input(query, formatted_steps)
@@ -308,7 +308,7 @@ class ValueModel_qwen:
             print(f"Error in get_value: {str(e)}")
             return self.low
 
-    def get_value_with_steps(self, query, steps): # used in the code of SamplingTree
+    def get_value_with_steps(self, query, steps): 
         try:
             input_ids, token_masks = self.prepare_input(query, steps)
             step_rewards = self.compute_rewards(input_ids, token_masks)

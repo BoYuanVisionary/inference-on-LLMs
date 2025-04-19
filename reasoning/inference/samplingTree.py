@@ -35,8 +35,7 @@ if __name__ == "__main__":
 
     policy_model, tokenizer = load_model_with_vllm(model_name, task='auto', tensor_parallel_size=len(config["cuda_device_ids"]), gpu_memory_utilization=0.8)
     tokenizer.pad_token = tokenizer.eos_token 
-    reward_model = config.get("reward_model", None)
-    reward_model = ValueModel_qwen(device = "auto")
+    reward_model = ValueModel_qwen(device = "auto") # default one
 
     # inference hyperparameters
     num_return_sequences = config["num_return_sequences"]
@@ -52,6 +51,7 @@ if __name__ == "__main__":
     beam_width = config["beam_width"]
     max_steps = config["max_steps"]
     threshold = config["threshold"]
+    ORM_type = config["ORM_type"]
     # name of the results file
     config_name = config["config_name"]
 
@@ -78,14 +78,14 @@ if __name__ == "__main__":
         question = dataset['problem'][i]
         answer = dataset['solution'][i]        
 
-        tree = Tree(system_prompt, question, policy_model, reward_model, sampling_method, config_name, sampling_params, samplingTree_temperature, beam_width, threshold)
+        tree = Tree(system_prompt, question, policy_model, reward_model, sampling_method, config_name, sampling_params, samplingTree_temperature, beam_width, threshold, ORM_type)
         for _ in range(max_steps):
             path = tree.generate_next_trajectory() 
             tree.paths.append(path)
-            print(len(tree.paths))
-        majority_inference = MajorityInference(policy_model=policy_model, tokenizer=tokenizer, sampling_params=sampling_params, config_name=config_name, reward_model=reward_model, method = 'weighted_majority')
+            # print(len(tree.paths))
+        majority_inference = MajorityInference(policy_model=policy_model, tokenizer=tokenizer, sampling_params=sampling_params, config_name=config_name, reward_model=reward_model, method = 'weighted_majority', ORM_type=ORM_type)
         all_solutions  = [path.solutions for path in tree.explored_paths]
-        rewards = [np.min(path.scores) for path in tree.explored_paths]
+        rewards = [tree.get_reward(path.scores) for path in tree.explored_paths]
         
         solution = majority_inference.weighted_majority_vote(all_solutions, rewards)   
         extracted_answer = extract_answer(answer)

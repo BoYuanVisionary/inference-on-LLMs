@@ -1,0 +1,18 @@
+program: /ssdscratch/byuan48/efficient_reasoning/reasoning/inference/majority.py  # The script to run
+method: grid           # Or 'random', 'bayes'
+metric:
+  name: Accuracy     # The metric to optimize (replace with your actual metric)
+  goal: maximize     # Or 'minimize'
+
+parameters:
+  num_return_sequences:
+    values: [8, 16, 32]
+  # You can also include other parameters, e.g., model_name if you want to ablate models
+  # model_name:
+  #   values: ["meta-llama/Llama-3.2-1B-Instruct", "meta-llama/Llama-3.2-7B-Instruct"]
+
+# If you have parameters that should stay fixed for this sweep, you can include them
+# in the parameters section with a 'value' key instead of 'values'.
+# Example:
+# data_path:
+#   value: HuggingFaceH4/MATH-500

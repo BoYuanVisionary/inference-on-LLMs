@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import yaml
+import json
 import itertools
 from pathlib import Path
 import copy
+import os
 
-def generate_ablation_configs(base_config_path, ablation_params, output_dir):
+def generate_ablation_configs(base_config_path, ablation_params, output_dir, use_json=False):
     # Read base configuration
     with open(base_config_path, 'r') as f:
         base_config = yaml.safe_load(f)
@@ -32,30 +34,56 @@ def generate_ablation_configs(base_config_path, ablation_params, output_dir):
                 if part not in current:
                     current[part] = {}
                 current = current[part]
+            
+            # Set the value (now supporting nested lists)
             current[parts[-1]] = value
-            config_name_parts.append(f"{parts[-1]}_{value}")
+                
+            # Format the value for the config name
+            if isinstance(value, list):
+                # Handle nested lists by flattening them for the filename
+                flat_values = []
+                def flatten(lst):
+                    for item in lst:
+                        if isinstance(item, list):
+                            flatten(item)
+                        else:
+                            flat_values.append(str(item))
+                flatten(value)
+                formatted_value = '_'.join(flat_values)
+            else:
+                formatted_value = str(value)
+            config_name_parts.append(f"{parts[-1]}_{formatted_value}")
         
         # Update config name
         config['config_name'] = f"{base_config['config_name']}_{'_'.join(config_name_parts)}"
         configs.append(config)
         
         # Save config
-        output_path = Path(output_dir) / f"{config['config_name']}.yaml"
-        with open(output_path, 'w') as f:
-            yaml.dump(config, f, default_flow_style=False)
+        if use_json:
+            output_path = Path(output_dir) / f"{config['config_name']}.json"
+            with open(output_path, 'w') as f:
+                json.dump(config, f, indent=2)
+        else:
+            output_path = Path(output_dir) / f"{config['config_name']}.yaml"
+            with open(output_path, 'w') as f:
+                yaml.dump(config, f, default_flow_style=False)
     
     return configs
 
 if __name__ == "__main__":
-    # Example usage
+    # Example usage with nested lists
     ablation_params = {
-        'samplingTree_temperature': [0.1, 0.3, 0.5],
-        'beam_width': [2, 4, 8],
+        'cuda_device_ids': [[0,1], [2,3], [0,1,2,3]],  # Example of list parameters
         'max_steps': [1, 2, 3],
-        'threshold': [0.8, 0.9]
+        'beam_search_params': [
+            [[4, 0.1], [8, 0.2]],  # Example of nested list parameters
+            [[2, 0.3], [4, 0.4]],
+        ]
     }
     
-    base_config_path = "configs/experiments_417/samplingTree_llama_4_1.yaml"
-    output_dir = "configs/ablation_study"
+    base_config_path = "configs/experiments_417/Wmajority_llama_16_0.yaml"
+    output_dir = "configs/ablation_nested"
     
-    configs = generate_ablation_configs(base_config_path, ablation_params, output_dir) 
+    # Generate both YAML and JSON versions
+    configs_yaml = generate_ablation_configs(base_config_path, ablation_params, output_dir, use_json=False)
+    configs_json = generate_ablation_configs(base_config_path, ablation_params, output_dir + "_json", use_json=True) 

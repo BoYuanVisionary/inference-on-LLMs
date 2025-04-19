@@ -1,4 +1,4 @@
-config_name: Llama-3.2-1B-Instruct-Wmajority-4_2
+config_name: Llama-3.2-1B-Instruct-Wmajority-16_2
 
 # System parameters
 batch_size: 10
@@ -23,7 +23,7 @@ top_p: 0.9
 # weighted majority parameters
 experiment_name: weighted_majority_experiment
 inference_method: weighted_majority
-num_return_sequences: 4
+num_return_sequences: 16
 
 # wandb parameters
 wandb_project: efficient_reasoning

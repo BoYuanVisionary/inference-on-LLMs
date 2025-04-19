@@ -1,15 +1,16 @@
 import os
 import json
+import numpy as np
 class BaseInference:
     # This is the base class for all inference methods. It contains the common methods for all inference methods.
-    def __init__(self, policy_model, tokenizer, sampling_params, config_name, reward_model, method):
+    def __init__(self, policy_model, tokenizer, sampling_params, config_name, reward_model, method, ORM_type):
         self.policy_model = policy_model
         self.tokenizer = tokenizer
         self.sampling_params = sampling_params
         self.config_name = config_name
         self.reward_model = reward_model
         self.method = method
-
+        self.ORM_type = ORM_type
         # metrics
         self.sample_size = 0
         self.right_count = 0
@@ -35,7 +36,18 @@ class BaseInference:
         self.right_count = 0
         self.num_generated_tokens = []
         self.num_input_tokens = []
-
+    
+    def get_reward(self, rewards):
+        if self.ORM_type == 'min':
+            return min(rewards)
+        elif self.ORM_type == 'last':
+            return rewards[-1]
+        elif self.ORM_type == 'product':
+            return np.prod(rewards)
+        elif self.ORM_type == 'geo_mean':
+            return np.exp(np.mean(np.log(rewards)))
+        else:
+            raise ValueError(f"Invalid ORM type: {self.ORM_type}")
     def generate_text(self, system_prompt, questions): # Generate text using the chat template
         sampling_params = self.sampling_params
         conversations = [[
