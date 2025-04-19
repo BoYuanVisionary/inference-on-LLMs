@@ -1,7 +1,7 @@
 config_name: test
 
 # System parameters
-cuda_device_ids: [0, 1, 2, 3]
+cuda_device_ids: [0, 1, 2, 3, 4, 5, 6, 7]
 seed: 0
 
 # Dataset and model parameters
