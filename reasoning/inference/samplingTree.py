@@ -111,7 +111,7 @@ if __name__ == "__main__":
         error_steps_count_all += error_steps_count
         print(f'Error steps count: {error_steps_count_all}')
         wandb.log({"Error steps count": error_steps_count_all}, step=i)
-        print("--------------------------------")
+
 
 
     wandb.log({"Accuracy": right_count/len(dataset)})

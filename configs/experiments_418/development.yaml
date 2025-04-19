@@ -1,8 +1,8 @@
 config_name: test
 
 # System parameters
-cuda_device_ids: [0, 1, 2, 3, 4, 5, 6, 7]
-seed: 0
+cuda_device_ids: [0, 1, 2, 3]
+seed: 1000
 
 # Dataset and model parameters
 data_path: HuggingFaceH4/MATH-500

@@ -89,13 +89,15 @@ class BaseInference:
             },
             {
                 "role": "assistant",
-                "content": partial_solution
+                "content": partial_solution + '\n\n'
             } 
         ] for query, partial_solution in zip(questions, partial_solutions)]
 
         prompt_token_ids = [self.tokenizer.apply_chat_template(messages, add_generation_prompt=True) for messages in conversations]
         # remove the last 5 tokens for chat completion. Need test new models to see if this default number is right
-        prompt_token_ids = [prompt_token_id[:-5] for prompt_token_id in prompt_token_ids] 
+        # Add special token '\n\n' to the end of the prompt
+        token_id_to_add = self.tokenizer.encode('\n\n')[-1]
+        prompt_token_ids = [prompt_token_id[:-5] + [token_id_to_add] for prompt_token_id in prompt_token_ids] 
         outputs = self.policy_model.generate(prompt_token_ids=prompt_token_ids, sampling_params=sampling_params)
 
 

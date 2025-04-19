@@ -450,17 +450,24 @@ class Tree(BaseInference):
                 
                 new_path = Path(partial_solutions[i] + '\n\n' + new_solutions[i])
 
-                if len(partial_solutions[i]) > 5: # to ensure the partial solution is not too short like '' or '.' or '\n'
-                    temp_path1 = Path(partial_solutions[i])
-                    temp_path2 = Path(new_solutions[i])
-                    new_path.steps = temp_path1.steps + temp_path2.steps 
+                # if len(partial_solutions[i]) > 5: # to ensure the partial solution is not too short like '' or '.' or '\n'
+                #     temp_path1 = Path(partial_solutions[i])
+                #     temp_path2 = Path(new_solutions[i])
+                #     new_path.steps = temp_path1.steps + temp_path2.steps 
                 new_paths.append(new_path)
 
                 self.explored_paths.append(new_path)
                 new_scores = self.reward_model.get_value_with_steps(self.question, new_path.steps)
                 new_path.scores = new_scores
                 all_scores.append(self.get_reward(new_scores))
-                extracted_answers.append(extract_answer(new_path.solutions))
+                extracted_answers.append(extract_answer(new_path.solutions))                
+                # Check if scores are significantly different (threshold of 0.01)
+                score_diff = np.abs(np.array(new_path.scores[:first_score_index]) - np.array(path.scores[:first_score_index]))
+                if np.any(score_diff > 0.1):
+                    warnings.warn(f'The first {first_score_index} scores differ significantly between paths')
+                    print(f'Original scores: {path.scores[:first_score_index]}')
+                    print(f'New scores: {new_path.scores[:first_score_index]}')
+
                 
             # self consistency mechanism
             weighted_votes = [0.0] * len(next_steps)
