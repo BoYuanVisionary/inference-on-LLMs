@@ -146,6 +146,9 @@ if __name__ == "__main__":
     model, tokenizer = load_model_with_vllm(model_name, task='auto', tensor_parallel_size=len(config["cuda_device_ids"]), gpu_memory_utilization=0.8)
     tokenizer.pad_token = tokenizer.eos_token 
     reward_model = ValueModel_qwen(device = "auto") # Qwen/Qwen2.5-Math-PRM-7B
+    start_problem_index = config.get("begin_problem_index", 0)
+    end_problem_index = config.get("end_problem_index", len(dataset)-1)
+    dataset = dataset.select(range(start_problem_index, end_problem_index))
 
     # inference hyperparameters
     num_return_sequences = config["num_return_sequences"]
@@ -186,6 +189,7 @@ if __name__ == "__main__":
     # print(f"generated tokens per sample in average: {np.mean(inference.num_generated_tokens) * num_return_sequences}")
     wandb.log({"generated tokens per sample in average": np.mean(inference.num_generated_tokens) * num_return_sequences})
     print("Time taken: {} seconds".format(end_time - start_time))
+    print(f"index range for the dataset: {(start_problem_index, end_problem_index)}")
 
     wandb.finish()
 
