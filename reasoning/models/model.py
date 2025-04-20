@@ -252,8 +252,8 @@ class ValueModel_qwen:
         
         return input_ids, token_masks
     
-    def compute_rewards(self, input_ids, token_masks):
-        
+    def compute_rewards(self, input_ids, token_masks):# This may be inefficient, as we only need the probs of the special tokens
+
         with torch.no_grad():
             outputs = self.model(input_ids=input_ids)
         

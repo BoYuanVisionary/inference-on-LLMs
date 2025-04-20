@@ -133,8 +133,16 @@ if __name__ == "__main__":
     # use parser to parse the config file
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="../../configs/development.yaml")
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--model_name", type=str)
     args = parser.parse_args()
     config = load_config(args.config)
+
+    # Override the config with the command line arguments
+    config["seed"] = args.seed
+    config["model_name"] = args.model_name
+    config['config_name'] = config['model_name'].split('/')[-1] + '-Wmajority-' + str(config['num_return_sequences']) + '-seed-' + str(config['seed'])
+
     apply_config(config) # set up wandb, seed and cuda device
     print(config)
 

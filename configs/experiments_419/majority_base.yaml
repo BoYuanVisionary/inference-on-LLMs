@@ -1,15 +1,18 @@
-config_name: Llama-3.2-1B-Instruct-Wmajority-128
+# This is a base config for all the experiments on weighted majority voting. 
+# Run 3 independent experiments with different seeds and num_return_sequences of 64
+
+config_name: None
 
 # System parameters
 cuda_device_ids: [0, 1, 2, 3]
-seed: 0
+seed: None
 # For temporarily bypass the memory leakage issue when generating too many tokens
 begin_problem_index: 0 # index starts from 0
 end_problem_index: 500 # index starts from 0
 
 # Dataset and model parameters
 data_path: HuggingFaceH4/MATH-500
-model_name: meta-llama/Llama-3.2-1B-Instruct
+model_name: None
 reward_model_name: Qwen/Qwen2.5-Math-PRM-7B # default one
  
 # Inference parameters
@@ -20,7 +23,7 @@ top_p: 0.9
 
 # weighted majority parameters
 inference_method: weighted_majority # weighted_majority, best_of_N, majority
-num_return_sequences: 128
+num_return_sequences: 64
 
 
 # wandb parameters

@@ -1,18 +1,30 @@
-program: /ssdscratch/byuan48/efficient_reasoning/reasoning/inference/majority.py  # The script to run
-method: grid           # Or 'random', 'bayes'
+# three experiments with different random seeds for each model
+
+# ─── W&B sweep spec ───────────────────────────────
+program: /ssdscratch/byuan48/efficient_reasoning/reasoning/inference/majority.py                
+method: grid                   # exhaustive over every combination
+name: model‑vs‑seed            # appears in the UI
+project: efficient_reasoning   # goes to the same W&B project
 metric:
-  name: Accuracy     # The metric to optimize (replace with your actual metric)
-  goal: maximize     # Or 'minimize'
+  name: accuracy               # ⬅ change to whatever you log
+  goal: maximize
 
 parameters:
-  num_return_sequences:
-    values: [8, 16, 32]
-  # You can also include other parameters, e.g., model_name if you want to ablate models
-  # model_name:
-  #   values: ["meta-llama/Llama-3.2-1B-Instruct", "meta-llama/Llama-3.2-7B-Instruct"]
+  # —— 1. seeds to test ——
+  seed:
+    values: [0, 42, 123]
 
-# If you have parameters that should stay fixed for this sweep, you can include them
-# in the parameters section with a 'value' key instead of 'values'.
-# Example:
-# data_path:
-#   value: HuggingFaceH4/MATH-500
+  # —— 2. candidate models ——
+  model_name:
+    values:
+      - meta-llama/Llama-3.2-1B-Instruct
+      - meta-llama/Llama-3.2-3B-Instruct
+      - Qwen/Qwen2.5-7B-Instruct
+
+command:                # how each run is launched
+  - ${env}
+  - python
+  - ${program}
+  - --config
+  - b.yaml              # keep using your base config
+  - ${args_no_hyphens}  # W&B appends "seed=…" "model_name=…"

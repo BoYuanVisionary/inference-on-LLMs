@@ -211,8 +211,9 @@ def load_model(model_name, device="cuda:0"):
     return model, tokenizer
 
 def load_model_with_vllm(model_name, task, tensor_parallel_size, gpu_memory_utilization):
-
-    llm = LLM(model=model_name, tokenizer = model_name,tensor_parallel_size=tensor_parallel_size, gpu_memory_utilization = gpu_memory_utilization, task=task)
+    # using enforce_eager=True to avoid the memory leakage issue
+    llm = LLM(model=model_name, tokenizer = model_name,tensor_parallel_size=tensor_parallel_size, 
+              gpu_memory_utilization = gpu_memory_utilization, task=task, enforce_eager=True)
     tokenizer = llm.get_tokenizer()
     return llm, tokenizer
 

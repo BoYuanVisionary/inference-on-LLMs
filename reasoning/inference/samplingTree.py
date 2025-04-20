@@ -37,7 +37,7 @@ if __name__ == "__main__":
     tokenizer.pad_token = tokenizer.eos_token 
     reward_model = ValueModel_qwen(device = "auto") # default one
     start_problem_index = config.get("begin_problem_index", 0)
-    end_problem_index = config.get("end_problem_index", len(dataset)-1)
+    end_problem_index = config.get("end_problem_index", len(dataset))
     dataset = dataset.select(range(start_problem_index, end_problem_index))
 
     # inference hyperparameters
