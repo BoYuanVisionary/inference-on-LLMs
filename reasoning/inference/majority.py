@@ -151,7 +151,7 @@ if __name__ == "__main__":
     dataset = dataset['test']
     model_name = config["model_name"]
     # need to set gpu_memory_utilization to 0.8 to avoid OOM when using qwen2.5b with 16
-    model, tokenizer = load_model_with_vllm(model_name, task='auto', tensor_parallel_size=len(config["cuda_device_ids"]), gpu_memory_utilization=0.8)
+    model, tokenizer = load_model_with_vllm(model_name, task='auto', tensor_parallel_size=len(config["cuda_device_ids"]), gpu_memory_utilization=0.5)
     tokenizer.pad_token = tokenizer.eos_token 
     reward_model = ValueModel_qwen(device = "auto") # Qwen/Qwen2.5-Math-PRM-7B
     start_problem_index = config.get("begin_problem_index", 0)
